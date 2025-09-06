@@ -1,0 +1,2 @@
+INT <ID,texto> EQ <NUM,10>;
+<ID,texto> EQ <ID,texto> PLUS <NUM,20>;

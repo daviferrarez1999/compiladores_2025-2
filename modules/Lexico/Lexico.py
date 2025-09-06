@@ -1,45 +1,41 @@
 
 import os
+from injector import inject
 import yaml
+
+from modules.FileSystem import IFileSystem
+from .ILexico import ILexico
 from .types import Token, Identifier
 from typing import List, cast, Dict
-from modules import fileSystem
-import sys
 
 PRIVATE_TOKENS = 'private_tokens.yml'
 IDENTIFIERS = 'identifiers.yml'
 
-class Lexico:
+class Lexico(ILexico):
     privateTokens: List[Token]
     identifiers: Dict[str, Identifier]
     inputDataFile: str
+    fs: IFileSystem
 
-    def __init__(self):
+    @inject
+    def __init__(self, fs: IFileSystem):
+        self.fs = fs
         self.startConfig()
 
     def loadPrivateTokens(self) -> Token:
-        file = fileSystem.downloadFile(os.path.join('lexico', 'config', PRIVATE_TOKENS))
+        file = self.fs.downloadFile(os.path.join('modules', 'Lexico','config', PRIVATE_TOKENS))
         data = yaml.safe_load(file)
         return cast(List[Token], data)
     
     def loadIdentifiers(self) -> Token:
-        file = fileSystem.downloadFile(os.path.join('lexico', 'config', IDENTIFIERS))
+        file = self.fs.downloadFile(os.path.join('modules', 'Lexico', 'config', IDENTIFIERS))
         data = yaml.safe_load(file)
         return data
-    
-    def loadInputFile(self):
-        if len(sys.argv) < 2:
-            print("Por favor, informe o nome do arquivo.")
-            sys.exit(1)            
-        fileName = sys.argv[1]
-        return fileSystem.downloadFile(fileName)
     
     def startConfig(self):
         print("Carregando configurações do Léxico")
         self.privateTokens = self.loadPrivateTokens()
-        self.inputDataFile = self.loadInputFile()
         self.identifiers = self.loadIdentifiers()
-        print(self.identifiers)
         print("Configurações carregadas")
 
     def generateOutput(self):
@@ -87,3 +83,12 @@ class Lexico:
             return int(number)
         except ValueError:
             return None
+        
+        
+    def input(self, path):
+        self.inputDataFile = self.fs.downloadFile(path)
+        
+    def output(self) -> str:
+        generatedOutput = self.generateOutput()
+        self.fs.uploadFile(os.path.join('tmp','lexico'), 'saida.txt', 'w', generatedOutput)
+        return generatedOutput

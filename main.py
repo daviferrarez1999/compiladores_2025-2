@@ -1,16 +1,16 @@
-from modules import fileSystem
-from lexico import Lexico
+from modules import lexico
+import sys
 
 def main():
-    print("Iniciando código....")
-    print("Começando a geração do código léxico")
-    lexico = Lexico()
-    output = lexico.generateOutput()
-    print('Imprimindo saída')
-    print(output)
+    if len(sys.argv) < 2:
+        print("Nome do arquivo precisa ser fornecido")
+        sys.exit(1)
+    arquivo = sys.argv[1]
+    print('Arquivo de entrda:',arquivo)
+    print('Iniciando Léxico')
+    lexico.input(arquivo)
+    lexico.output()
     print('Léxico finalizado')
-
-
 
 if __name__ == "__main__":
     main()

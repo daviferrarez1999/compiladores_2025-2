@@ -1,11 +1,12 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
+from typing import Literal
 
-class IFileSystem:
+class IFileSystem(ABC):
         @abstractmethod
         def downloadFile(self, path: str):
             ...    
         
         @abstractmethod
-        def uploadFile(self, path: str):
+        def uploadFile(self, path: str, fileName: str, mode: Literal['wb', 'w'], data):
             ...    
         

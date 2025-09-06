@@ -13,11 +13,11 @@ class LocalFileSystem(IFileSystem):
         except:
             print("Fail to read file or buffer.")
         
-    def uploadFile(self, path: str, mode: Literal['wb', 'w'], data):
+    def uploadFile(self, path: str, fileName: str, mode: Literal['wb', 'w'], data):
         try:      
             rootWithPath = os.path.join(ROOT_PATH, path)
             os.makedirs(rootWithPath, exist_ok=True)
-            with open(rootWithPath, mode) as file:
+            with open(os.path.join(rootWithPath, fileName), mode) as file:
                 file.write(data)
         except Exception as e:
             print("Fail to write file or buffer.")
