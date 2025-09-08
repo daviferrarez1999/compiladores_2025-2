@@ -12,7 +12,7 @@ PRIVATE_TOKENS = 'private_tokens.yml'
 IDENTIFIERS = 'identifiers.yml'
 
 class Lexico(ILexico):
-    privateTokens: List[Token]
+    privateTokens: Token
     """
     Tokens privados da linguagem
     """
@@ -103,18 +103,16 @@ class Lexico(ILexico):
         """
         Verifica se é um token privado.
         """
-        for privateToken in self.privateTokens:
-            if(privateToken.get('identifier', '') == token):
-                return True
-        return False
+        return True if self.privateTokens.get(token, None) else False
+
     
     def outputPrivateToken(self, token) -> str:
         """
         Transforma o valor do token pelo valor de saída adequado.
         """
-        for privateToken in self.privateTokens:
-            if(privateToken.get('identifier', '') == token):
-                return privateToken.get('output', '')
+        privateToken = self.privateTokens.get(token, None)
+        if privateToken:
+            return privateToken.get('output', '')
         return ''
     
     def loadtIdentifier(self, word):

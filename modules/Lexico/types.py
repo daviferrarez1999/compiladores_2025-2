@@ -1,9 +1,7 @@
 from enum import Enum
-from typing import TypedDict, List
+from typing import TypedDict
 
 class Token(TypedDict):
-    name: str
-    identifier: str
     output: str
 
 class Identifier(TypedDict):
