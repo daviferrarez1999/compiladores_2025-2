@@ -13,8 +13,17 @@ IDENTIFIERS = 'identifiers.yml'
 
 class Lexico(ILexico):
     privateTokens: List[Token]
+    """
+    Tokens privados da linguagem
+    """
     identifiers: Dict[str, Identifier]
-    inputDataFile: str
+    """
+    Tokens identificadores
+    """
+    inputDataFile: str = ""
+    """
+    Dados de entrada
+    """
     fs: IFileSystem
 
     @inject
@@ -23,22 +32,34 @@ class Lexico(ILexico):
         self.startConfig()
 
     def loadPrivateTokens(self) -> Token:
-        file = self.fs.downloadFile(os.path.join('modules', 'Lexico','config', PRIVATE_TOKENS))
+        """
+        Carrega as configurações dos tokens privados
+        """
+        file = self.fs.downloadFile(os.path.join('config', 'lexico', PRIVATE_TOKENS))
         data = yaml.safe_load(file)
         return cast(List[Token], data)
     
     def loadIdentifiers(self) -> Token:
-        file = self.fs.downloadFile(os.path.join('modules', 'Lexico', 'config', IDENTIFIERS))
+        """
+        Carrega as configurações dos tokens identificadores
+        """
+        file = self.fs.downloadFile(os.path.join('config', 'lexico', IDENTIFIERS))
         data = yaml.safe_load(file)
         return data
     
     def startConfig(self):
+        """
+        Carrega as configurações
+        """
         print("Carregando configurações do Léxico")
         self.privateTokens = self.loadPrivateTokens()
         self.identifiers = self.loadIdentifiers()
         print("Configurações carregadas")
 
     def generateOutput(self):
+        """
+        Gera o output de acordo com os dados de entrada
+        """
         output = ""
         word = ""
         for char in self.inputDataFile:
@@ -53,22 +74,34 @@ class Lexico(ILexico):
                 word += char
         return output            
     
-    def isBreakPoint(self, char: str):
+    def isBreakPoint(self, char: str) -> bool:
+        """
+        Verifica se é um caractere de quebra.
+        """
         return char == '\n' or char == ' ' or char == ';'
     
     def isPrivateToken(self, token) -> str:
+        """
+        Verifica se é um token privado.
+        """
         for privateToken in self.privateTokens:
             if(privateToken.get('identifier', '') == token):
                 return True
         return False
     
     def outputPrivateToken(self, token) -> str:
+        """
+        Transforma o valor do token pelo valor de saída adequado.
+        """
         for privateToken in self.privateTokens:
             if(privateToken.get('identifier', '') == token):
                 return privateToken.get('output', '')
         return ''
     
     def loadtIdentifier(self, word):
+        """
+        Transforma o valor do token pelo valor de saída adequado.
+        """
         if word:
             number = self.parseInt(word)
             if number:
@@ -79,6 +112,9 @@ class Lexico(ILexico):
             return ''
     
     def parseInt(self, number) -> int | None:
+        """
+        Transforma o valor em numérico com "safe parse".
+        """
         try:
             return int(number)
         except ValueError:
