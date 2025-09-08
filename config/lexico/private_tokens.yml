@@ -10,9 +10,18 @@
 - name: RB
   identifier: )
   output: RB
+- name: LK
+  identifier: "{"
+  output: LK
+- name: RK
+  identifier: "}"
+  output: RK
 - name: "="
   identifier: "="
   output: EQ
+- name: "=="
+  identifier: "=="
+  output: EQCMP
 - name: "+"
   identifier: "+"
   output: PLUS

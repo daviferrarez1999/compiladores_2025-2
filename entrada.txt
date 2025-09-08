@@ -1,2 +1,6 @@
 int texto = 10;
 texto = texto + 20;
+
+int test() {
+    int a == 20;
+}

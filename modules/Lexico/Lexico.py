@@ -62,7 +62,9 @@ class Lexico(ILexico):
         """
         output = ""
         word = ""
-        for char in self.inputDataFile:
+        for index in range(len(self.inputDataFile)):
+            char = self.inputDataFile[index]
+
             if self.isBreakPoint(char):
                 if(self.isPrivateToken(word)):
                     output += self.outputPrivateToken(word)
@@ -72,7 +74,12 @@ class Lexico(ILexico):
                 word = ""
             else:
                 word += char
-        return output            
+        if(self.isPrivateToken(word)):
+            output += self.outputPrivateToken(word)
+        else:
+            output += self.loadtIdentifier(word)
+        word = ""
+        return output
     
     def isBreakPoint(self, char: str) -> bool:
         """
@@ -101,22 +108,22 @@ class Lexico(ILexico):
     def loadtIdentifier(self, word):
         """
         Transforma o valor do token pelo valor de saída adequado.
-        """
+        """ 
         if word:
             number = self.parseInt(word)
             if number:
-                return self.identifiers.get('number', '').get('output') +word+">"
+                return self.identifiers.get('number', '').get('output').replace('{VALUE}', word)
             else:
-                return self.identifiers.get('id', '').get('output') +word+">"
+                return self.identifiers.get('id', '').get('output').replace('{VALUE}', word)
         else:
             return ''
     
-    def parseInt(self, number) -> int | None:
+    def parseInt(self, number) -> float | None:
         """
         Transforma o valor em numérico com "safe parse".
         """
         try:
-            return int(number)
+            return float(number)
         except ValueError:
             return None
         

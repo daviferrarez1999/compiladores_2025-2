@@ -1,4 +1,6 @@
 number:
-  output: <NUM,
+  output: <NUM,{VALUE}>
 id:
-  output: <ID,
+  output: <ID,{VALUE}>
+string:
+  output: <STR,{VALUE}>
