@@ -5,7 +5,7 @@ import yaml
 
 from modules.FileSystem import IFileSystem
 from .ILexico import ILexico
-from .types import Token, Identifier
+from .types import LexicoModes, Token, Identifier
 from typing import List, cast, Dict
 
 PRIVATE_TOKENS = 'private_tokens.yml'
@@ -24,6 +24,7 @@ class Lexico(ILexico):
     """
     Dados de entrada
     """
+    mode: LexicoModes
     fs: IFileSystem
 
     @inject
@@ -56,12 +57,22 @@ class Lexico(ILexico):
         self.identifiers = self.loadIdentifiers()
         print("Configurações carregadas")
 
+    def setReadingMode(self):
+        self.mode = LexicoModes.READING
+
+    def setCommentMode(self):
+        self.mode = LexicoModes.COMMENT
+
+    def setStringMode(self):
+        self.mode = LexicoModes.STRING
+
     def generateOutput(self):
         """
         Gera o output de acordo com os dados de entrada
         """
         output = ""
         word = ""
+        self.mode = LexicoModes.READING
         for index in range(len(self.inputDataFile)):
             char = self.inputDataFile[index]
 
@@ -74,6 +85,7 @@ class Lexico(ILexico):
                 word = ""
             else:
                 word += char
+
         if(self.isPrivateToken(word)):
             output += self.outputPrivateToken(word)
         else:

@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import TypedDict, List
 
 class Token(TypedDict):
@@ -7,3 +8,8 @@ class Token(TypedDict):
 
 class Identifier(TypedDict):
     output: str
+
+class LexicoModes(Enum):
+    READING = "READING"
+    COMMENT = "COMMENT"
+    STRING = "STRING"
