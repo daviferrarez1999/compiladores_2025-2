@@ -4,3 +4,5 @@ texto = texto + 20;
 int test() {
     int a == 20;
 }
+
+if(x1 <= 32) b = 10;
