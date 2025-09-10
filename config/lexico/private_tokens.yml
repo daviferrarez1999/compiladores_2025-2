@@ -2,21 +2,49 @@ for:
   output: FOR
 if:
   output: IF
-(:
-  output: LB
-):
-  output: RB
+"(":
+  output: LPARENT
+")":
+  output: RPARENT
 "{":
-  output: LK
+  output: LB
 "}":
-  output: RK
+  output: RB
 "=":
-  output: EQ
+  output: ASSIGN
 "==":
-  output: EQCMP
+  output: EQ
 "+":
   output: PLUS
 "-":
   output: MINUS
 int:
   output: INT
+"--":
+  output: TWOMINUS
+"++":
+  output: TWOPLUS
+"!":
+  output: NEG
+"<":
+  output: LT # Less Than (menor que)
+"<=":
+  output: LEQ # Less than or Equal (menor ou igual que)
+">":
+  output: GT # Greater Than (maior que)
+">=":
+  output: GEQ # Greater than or Equal (maior ou igual que)
+"!=":
+  output: DIFF
+"||":
+  output: OR
+"*":
+  output: MULT
+"/":
+  output: DIV
+"%":
+  output: MOD
+"&&":
+  output: AND
+";":
+  output: SEMICOLON
