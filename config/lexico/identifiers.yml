@@ -4,5 +4,3 @@ id:
   output: <ID,{VALUE}>
 string:
   output: <STR,{VALUE}>
-if:
-  output: IF

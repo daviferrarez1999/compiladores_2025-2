@@ -1,11 +1,11 @@
 for:
   output: FOR
 if:
-  output: IF
+  output: "IF "
 "(":
-  output: LPARENT
+  output: "LPARENT "
 ")":
-  output: RPARENT
+  output: "RPARENT "
 "{":
   output: LB
 "}":

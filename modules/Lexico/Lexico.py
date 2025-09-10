@@ -83,10 +83,10 @@ class Lexico(ILexico):
                     output += self.loadtIdentifier(word)
                 if char == "(":
                     output += self.outputPrivateToken("(")
-                else:
-                    output += char
-                if char == ")":
+                    index = index+1
+                elif char == ")":
                     output += self.outputPrivateToken(")")
+                    index = index+1
                 else:
                     output += char
                 word = ""
