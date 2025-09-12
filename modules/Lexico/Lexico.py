@@ -76,7 +76,13 @@ class Lexico(ILexico):
         for index in range(len(self.inputDataFile)):
             char = self.inputDataFile[index]
 
-            if self.isBreakPoint(char):
+            if char == '/' and index+1 < len(self.inputDataFile) and self.inputDataFile[index+1] == '*':
+                self.setCommentMode()
+                print("Entrou")
+            elif self.mode == LexicoModes.COMMENT:
+                if char == '/' and index-1 >= 0 and self.inputDataFile[index-1] == '*':
+                    self.setReadingMode()
+            elif self.isBreakPoint(char):
                 if(self.isPrivateToken(word)):
                     output += self.outputPrivateToken(word)
                 else:

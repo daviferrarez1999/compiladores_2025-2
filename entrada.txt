@@ -1,6 +1,13 @@
 int texto = 10;
 texto = texto + 20;
 
+/*Teste
+Mais teste
+*/
+
 int test() {
-    int a == 20;
+    /*
+    Realmente é um teste
+    */int a == 20;
+    char b = 'b';
 }
