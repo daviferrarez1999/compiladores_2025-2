@@ -1,4 +1,4 @@
-int texto = 10;
+int texto= 10;
 texto = texto + 20;
 
 int test() {

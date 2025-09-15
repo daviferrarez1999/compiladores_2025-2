@@ -89,6 +89,9 @@ class Lexico(ILexico):
                     index = index+1
                 else:
                     output += char
+                # if index + 1 < len(self.inputDataFile):
+                #     if self.inputDataFile[index+1] != ' ':
+                #         output += ' '
                 word = ""
             else:
                 word += char
