@@ -81,7 +81,17 @@ class Lexico(ILexico):
                     output += self.outputPrivateToken(word)
                 else:
                     output += self.loadtIdentifier(word)
-                output+= char
+                if char == "(":
+                    output += self.outputPrivateToken("(")
+                    index = index+1
+                elif char == ")":
+                    output += self.outputPrivateToken(")")
+                    index = index+1
+                else:
+                    output += char
+                # if index + 1 < len(self.inputDataFile):
+                #     if self.inputDataFile[index+1] != ' ':
+                #         output += ' '
                 word = ""
             else:
                 word += char
@@ -97,7 +107,7 @@ class Lexico(ILexico):
         """
         Verifica se é um caractere de quebra.
         """
-        return char == '\n' or char == ' ' or char == ';'
+        return char == '\n' or char == ' ' or char == ';' or char == '(' or char == ')'
     
     def isPrivateToken(self, token) -> str:
         """
