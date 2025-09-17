@@ -89,23 +89,20 @@ class Lexico(ILexico):
                         self.mode = LexicoModes.READING
                     self.evenCountBars = True
                 index = index+1
-            elif self.isBreakPoint(char):
-                if(self.isPrivateToken(word)):
-                    output += self.outputPrivateToken(word)
+            elif self.mode == LexicoModes.READING:
+                if not self.isNumberAndLetter(char):
+                    # word 
+                    if(self.isPrivateToken(word)):
+                        if not self.isPrivateToken(word+char):
+                            output += self.outputPrivateToken(word)
+                            word=""
+                        else:
+                            word=char
+                    else:
+                        output += self.loadtIdentifier(word)
+                        word=char
                 else:
-                    output += self.loadtIdentifier(word)
-                if char == "(":
-                    output += self.outputPrivateToken("(")
-                    index = index+1
-                elif char == ")":
-                    output += self.outputPrivateToken(")")
-                    index = index+1
-                else:
-                    output += char
-                # if index + 1 < len(self.inputDataFile):
-                #     if self.inputDataFile[index+1] != ' ':
-                #         output += ' '
-                word = ""
+                    word+=char
             else:
                 word += char
 
@@ -116,11 +113,16 @@ class Lexico(ILexico):
         word = ""
         return output
     
-    def isBreakPoint(self, char: str) -> bool:
+    def isNumberAndLetter(self, char: str) -> bool:
         """
         Verifica se é um caractere de quebra.
         """
-        return char == '\n' or char == ' ' or char == ';' or char == '(' or char == ')'
+        numberOfChar = ord(char)
+        return ((numberOfChar >= 65 and numberOfChar <= 90) 
+                or (numberOfChar >= 97 and numberOfChar <= 122) 
+                or (numberOfChar >= 48 and numberOfChar <= 57)
+                or numberOfChar == 46
+            )
     
     def isPrivateToken(self, token) -> str:
         """
