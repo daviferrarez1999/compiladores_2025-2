@@ -66,6 +66,8 @@ class Lexico(ILexico):
     def setStringMode(self):
         self.mode = LexicoModes.STRING
 
+    def
+
     def generateOutput(self):
         """
         Gera o output de acordo com os dados de entrada
