@@ -1,6 +1,6 @@
 int texto= 10;
 texto = texto + 20;
-
+string x = "ola \" \\";
 int test() {
     int a == 20;
 }

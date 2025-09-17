@@ -76,7 +76,20 @@ class Lexico(ILexico):
         for index in range(len(self.inputDataFile)):
             char = self.inputDataFile[index]
 
-            if self.isBreakPoint(char):
+            if char == '"' and self.mode == LexicoModes.READING:
+                self.evenCountBars = True
+                self.mode = LexicoModes.STRING
+            
+            if self.mode == LexicoModes.STRING:
+                word+=char
+                if char == '\\':
+                    self.evenCountBars = not self.evenCountBars
+                if len(word) > 1 and char == '"':
+                    if self.evenCountBars:
+                        self.mode = LexicoModes.READING
+                    self.evenCountBars = True
+                index = index+1
+            elif self.isBreakPoint(char):
                 if(self.isPrivateToken(word)):
                     output += self.outputPrivateToken(word)
                 else:
