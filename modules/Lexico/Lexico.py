@@ -66,9 +66,62 @@ class Lexico(ILexico):
     def setStringMode(self):
         self.mode = LexicoModes.STRING
 
-    def
+    import string
+
+    def char_class (char):
+        if char in set(string.ascii_letters):
+            return "letra"
+        elif char in set(string.digits):
+            return "digito"
+        else:
+            return "outro"
+
+    afd = {
+        0: {
+            "letra" : 1,
+            "digito": 3,
+            "outro": 3
+        },
+        1: {
+            "letra" : 1,
+            "digito": 1,
+            "outro": 2
+        }
+    }
+
+    def next_stage (state, classe):
+        return afd[state][classe]
+
+    def recognizer(self, index):
+        def next_char():
+            if index+1 < len(self.inputDataFile):
+                index += 1
+                return self.inputDataFile[index]
+            else:
+                return ()
+
+        char = next_char()
+        state = 0
+        done = False
+        lexeme = ""
+        while(not done):
+            classe = char_class(char)
+            state = next_stage(state, classe)
+            match state:
+                case 1:
+                    lexeme.append(char)
+                    char = next_char()
+                case 2:
+                    token = "ID"
+                    done = True
+                case 3:
+                    token = "ERROR"
+                    done = True
+        return Token
 
     def generateOutput(self):
+        index = -1
+        return self.recognizer(index)
         """
         Gera o output de acordo com os dados de entrada
         """
