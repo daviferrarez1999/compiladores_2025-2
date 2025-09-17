@@ -66,50 +66,51 @@ class Lexico(ILexico):
     def setStringMode(self):
         self.mode = LexicoModes.STRING
 
-    import string
+    def recognizer(self):
+        import string
 
-    def char_class (char):
-        if char in set(string.ascii_letters):
-            return "letra"
-        elif char in set(string.digits):
-            return "digito"
-        else:
-            return "outro"
-
-    afd = {
-        0: {
-            "letra" : 1,
-            "digito": 3,
-            "outro": 3
-        },
-        1: {
-            "letra" : 1,
-            "digito": 1,
-            "outro": 2
-        }
-    }
-
-    def next_stage (state, classe):
-        return afd[state][classe]
-
-    def recognizer(self, index):
-        def next_char():
-            if index+1 < len(self.inputDataFile):
-                index += 1
-                return self.inputDataFile[index]
+        def char_class (char):
+            if char in set(string.ascii_letters):
+                return "letra"
+            elif char in set(string.digits):
+                return "digito"
             else:
-                return ()
+                return "outro"
+
+        afd = {
+            0: {
+                "letra" : 1,
+                "digito": 3,
+                "outro": 3
+            },
+            1: {
+                "letra" : 1,
+                "digito": 1,
+                "outro": 2
+            }
+        }
+
+        def next_stage (state, classe):
+            return afd[state][classe]
+
+        def next_char():
+            if self.index+1 < len(self.inputDataFile):
+                self.index += 1
+                return self.inputDataFile[self.index]
+            else:
+                return 'EOF'
 
         char = next_char()
         state = 0
         done = False
         lexeme = ""
+        token = "EOF"
         while(not done):
             classe = char_class(char)
             state = next_stage(state, classe)
             match state:
                 case 1:
-                    lexeme.append(char)
+                    lexeme+=(char)
                     char = next_char()
                 case 2:
                     token = "ID"
@@ -117,11 +118,20 @@ class Lexico(ILexico):
                 case 3:
                     token = "ERROR"
                     done = True
+        from time import sleep
+        sleep(1)
         return Token
 
     def generateOutput(self):
-        index = -1
-        return self.recognizer(index)
+        self.index = -1
+
+        word = ""
+
+        while True:
+            word += self.recognizer()
+            if word=="EOF":
+                break
+            print(word)
         """
         Gera o output de acordo com os dados de entrada
         """
