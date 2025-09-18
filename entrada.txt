@@ -1,8 +1,13 @@
 int texto= 10;
 texto = texto + 20;
 string x = "ola \" \\";
+
+/*Teste
+Testando
+*/
+
 int test() {
     int a == 20;
 }
 
-if(x1 <= 32) b = 10;
+/*Mais teste*/ if(x1 <= 32) b = 10;
