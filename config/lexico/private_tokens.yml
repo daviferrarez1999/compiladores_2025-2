@@ -48,3 +48,5 @@ int:
   output: AND
 ";":
   output: SEMICOLON
+"/*":
+  output: COMMENT

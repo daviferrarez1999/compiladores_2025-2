@@ -77,10 +77,24 @@ class Lexico(ILexico):
             char = self.inputDataFile[index]
 
             if char == '"' and self.mode == LexicoModes.READING:
+                output+=word
+                word=""
                 self.evenCountBars = True
                 self.mode = LexicoModes.STRING
+
+            if word == "/*" and self.mode == LexicoModes.READING:
+                self.setCommentMode()
             
-            if self.mode == LexicoModes.STRING:
+            if self.mode == LexicoModes.COMMENT:
+                if word[-2:] == "*/":
+                    if char == '\n':
+                        word=""
+                    else:
+                        word=char
+                    self.setReadingMode()
+                else:
+                    word+=char
+            elif self.mode == LexicoModes.STRING:
                 word+=char
                 if char == '\\':
                     self.evenCountBars = not self.evenCountBars
@@ -95,12 +109,19 @@ class Lexico(ILexico):
                     if(self.isPrivateToken(word)):
                         if not self.isPrivateToken(word+char):
                             output += self.outputPrivateToken(word)
-                            word=""
-                        else:
                             word=char
+                        else:
+                            word+=char
                     else:
-                        output += self.loadtIdentifier(word)
-                        word=char
+                        if word == '\n' or word == ' ':
+                            output+=word
+                            word=char
+                        else:
+                            output += self.loadtIdentifier(word)
+                            word=char
+                elif word == '\n' or word == ' ':
+                    output+=word
+                    word=char
                 else:
                     word+=char
             else:
