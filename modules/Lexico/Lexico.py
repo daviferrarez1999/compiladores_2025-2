@@ -166,7 +166,10 @@ class Lexico(ILexico):
                             output+=word
                             word=self.computeChar(char)
                         else:
-                            output += self.loadtIdentifier(word)
+                            if(self.isValidIdentifier(word)):
+                                output += self.loadtIdentifier(word)
+                            else:
+                                print(f"ERRO AO CARREGAR IDENTIFICAR: {word}")
                             word=self.computeChar(char)
                 else:
                     if self.isPrivateToken(word):
@@ -187,6 +190,10 @@ class Lexico(ILexico):
                 output += self.loadtIdentifier(word)
         word = ""
         return output
+    
+    def isValidIdentifier(self, word: str) -> bool:
+        # não pode incirar com número...
+        return [True if self.isLetter(i) or i == '_' else False for i in word]
     
     def isNumberOrLetterOrDot(self, char: str) -> bool:
         """
@@ -233,11 +240,7 @@ class Lexico(ILexico):
         Transforma o valor do token pelo valor de saída adequado.
         """ 
         if word:
-            number = self.parseInt(word)
-            if number:
-                return self.identifiers.get('number', '').get('output').replace('{VALUE}', word)
-            else:
-                return self.identifiers.get('id', '').get('output').replace('{VALUE}', word)
+            return self.identifiers.get('id', '').get('output').replace('{VALUE}', word)
         else:
             return ''
     

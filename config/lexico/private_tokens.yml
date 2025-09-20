@@ -10,6 +10,10 @@ break:
   output: <BREAK>
 return:
   output: <RETURN>
+"true":
+  output: <TRUE>
+"false":
+  output: <FALSE>
 ",":
   output: <COMMA>
 "[":
