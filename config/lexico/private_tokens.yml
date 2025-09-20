@@ -1,52 +1,64 @@
 for:
-  output: FOR
+  output: <FOR>
 if:
-  output: IF
+  output: <IF>
+while:
+  output: <WHILE>
+readln:
+  output: <READLN>
+break:
+  output: <BREAK>
+return:
+  output: <RETURN>
+",":
+  output: <COMMA>
+"[":
+  output: <OPEN_BRACKETS>
+"]":
+  output: <CLOSE_BRACKETS>
 "(":
-  output: LPARENT
+  output: <OPEN_PARENTHESES>
 ")":
-  output: RPARENT
+  output: <CLOSE_PARENTHESES>
 "{":
-  output: LB
+  output: <OPEN_BRACES>
 "}":
-  output: RB
-"=":
-  output: ASSIGN
-"==":
-  output: EQ
+  output: <CLOSE_BRACES>
 "+":
-  output: PLUS
+  output: <PLUS>
 "-":
-  output: MINUS
+  output: <MINUS>
 int:
-  output: INT
+  output: <INT>
 "--":
-  output: TWOMINUS
+  output: <DECREMENT>
 "++":
-  output: TWOPLUS
+  output: <INCREMENT>
 "!":
-  output: NEG
+  output: <NEG>
+"=":
+  output: <ASSIGN>
+"==":
+  output: <EQUALS>
 "<":
-  output: LT # Less Than (menor que)
+  output: <LESS_THAN> # Less Than (menor que)
 "<=":
-  output: LEQ # Less than or Equal (menor ou igual que)
+  output: <LESS_THAN_EQUAL> # Less than or Equal (menor ou igual que)
 ">":
-  output: GT # Greater Than (maior que)
+  output: <GREATER_THAN> # Greater Than (maior que)
 ">=":
-  output: GEQ # Greater than or Equal (maior ou igual que)
+  output: <GREATER_THAN_EQUAL> # Greater than or Equal (maior ou igual que)
 "!=":
-  output: DIFF
+  output: <DIFF>
 "||":
-  output: OR
-"*":
-  output: MULT
-"/":
-  output: DIV
-"%":
-  output: MOD
+  output: <OR>
 "&&":
-  output: AND
+  output: <AND>
+"*":
+  output: <MULT>
+"/":
+  output: <DIV>
+"%":
+  output: <MOD>
 ";":
-  output: SEMICOLON
-"/*":
-  output: COMMENT
+  output: <SEMICOLON>

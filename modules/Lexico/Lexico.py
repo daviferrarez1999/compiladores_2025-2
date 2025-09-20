@@ -66,6 +66,15 @@ class Lexico(ILexico):
     def setStringMode(self):
         self.mode = LexicoModes.STRING
 
+    def setNumberMode(self):
+        self.mode = LexicoModes.NUMBER
+
+    def setFloatMode(self):
+        self.mode = LexicoModes.FLOAT
+
+    def setLogicMode(self):
+        self.mode = LexicoModes.LOGIC
+
     def generateOutput(self):
         """
         Gera o output de acordo com os dados de entrada
@@ -73,78 +82,136 @@ class Lexico(ILexico):
         output = ""
         word = ""
         self.mode = LexicoModes.READING
-        for index in range(len(self.inputDataFile)):
+        index = 0
+        while(index < len(self.inputDataFile)):
             char = self.inputDataFile[index]
 
             if char == '"' and self.mode == LexicoModes.READING:
                 output+=word
                 word=""
                 self.evenCountBars = True
-                self.mode = LexicoModes.STRING
+                self.setStringMode()
 
-            if word == "/*" and self.mode == LexicoModes.READING:
+            if word + char == "/*" and self.mode == LexicoModes.READING:
                 self.setCommentMode()
             
-            if self.mode == LexicoModes.COMMENT:
+            if word == "!" and self.isPrivateToken(word+char) and self.mode == LexicoModes.READING:
+                index+=1
+                output+= self.outputPrivateToken(word+char)
+                word="" 
+                continue
+
+            if len(word) == 0 and self.isDot(char) and self.mode == LexicoModes.READING:
+                word += self.computeChar(char)
+                self.setFloatMode()
+                index+=1
+                continue
+
+            if len(word) == 0 and self.isNumber(char) and self.mode == LexicoModes.READING:
+                word += self.computeChar(char)
+                self.setNumberMode()
+                index+=1
+                continue
+            
+            if self.mode == LexicoModes.FLOAT:
+                if self.isNumber(char):
+                    word += self.computeChar(char)
+                elif len(word) == 1:
+                    # ERRO
+                    print("ERRO LENDO NUMERO, ponto sozinho.")
+                    word=self.computeChar(char)
+                else:
+                    output+= self.identifiers.get('float', '').get('output').replace('{VALUE}', word)
+                    word=self.computeChar(char)
+                    self.setReadingMode()
+            elif self.mode == LexicoModes.NUMBER:
+                if self.isNumber(char):
+                    word+=self.computeChar(char)
+                elif self.isDot(char):
+                    word+=self.computeChar(char)
+                    self.setFloatMode()
+                else:
+                    output+= self.identifiers.get('number', '').get('output').replace('{VALUE}', word)
+                    word=self.computeChar(char)
+                    self.setReadingMode()
+            elif self.mode == LexicoModes.COMMENT:
                 if word[-2:] == "*/":
                     if char == '\n':
                         word=""
                     else:
-                        word=char
+                        word=self.computeChar(char)
                     self.setReadingMode()
                 else:
-                    word+=char
+                    word+=self.computeChar(char)
             elif self.mode == LexicoModes.STRING:
-                word+=char
+                word+=self.computeChar(char)
                 if char == '\\':
                     self.evenCountBars = not self.evenCountBars
                 if len(word) > 1 and char == '"':
                     if self.evenCountBars:
-                        self.mode = LexicoModes.READING
+                        output += self.identifiers.get("string", '').get('output').replace('{VALUE}', word)
+                        word = ""
+                        self.setReadingMode()
                     self.evenCountBars = True
-                index = index+1
             elif self.mode == LexicoModes.READING:
-                if not self.isNumberAndLetter(char):
-                    # word 
-                    if(self.isPrivateToken(word)):
+                if not (self.isLetter(char) or char == '_' or self.isNumber(char)):
+                    if self.isPrivateToken(word):
                         if not self.isPrivateToken(word+char):
                             output += self.outputPrivateToken(word)
-                            word=char
+                            word=self.computeChar(char)
                         else:
-                            word+=char
+                            word+=self.computeChar(char)
                     else:
                         if word == '\n' or word == ' ':
                             output+=word
-                            word=char
+                            word=self.computeChar(char)
                         else:
                             output += self.loadtIdentifier(word)
-                            word=char
-                elif word == '\n' or word == ' ':
-                    output+=word
-                    word=char
+                            word=self.computeChar(char)
                 else:
-                    word+=char
+                    if self.isPrivateToken(word):
+                        output += self.outputPrivateToken(word)
+                        word = ""
+                    word+=self.computeChar(char)
+                if char == '\n' or char == ' ':
+                    output+=char
             else:
-                word += char
+                word += self.computeChar(char)
+            
+            index+=1
 
-        if(self.isPrivateToken(word)):
-            output += self.outputPrivateToken(word)
-        else:
-            output += self.loadtIdentifier(word)
+        if self.mode == LexicoModes.READING:
+            if(self.isPrivateToken(word)):
+                output += self.outputPrivateToken(word)
+            else:
+                output += self.loadtIdentifier(word)
         word = ""
         return output
     
-    def isNumberAndLetter(self, char: str) -> bool:
+    def isNumberOrLetterOrDot(self, char: str) -> bool:
         """
         Verifica se é um caractere de quebra.
         """
+        return self.isLetter(char) or self.isNumber(char) or self.isDot(char)
+                
+    def isLetter(self, char: str) -> bool:
         numberOfChar = ord(char)
-        return ((numberOfChar >= 65 and numberOfChar <= 90) 
-                or (numberOfChar >= 97 and numberOfChar <= 122) 
-                or (numberOfChar >= 48 and numberOfChar <= 57)
-                or numberOfChar == 46
-            )
+        return ((numberOfChar >= ord("a") and numberOfChar <= ord("z")) 
+                or (numberOfChar >= ord("A") and numberOfChar <= ord("Z")))
     
+    def isNumber(self, char: str) -> bool:
+        numberOfChar = ord(char)
+        return (numberOfChar >= ord("0") and numberOfChar <= ord("9"))
+    
+    def isDot(self, char: str) -> bool:
+        return char == '.'
+    
+    def computeChar(self, char: str) -> str:
+        if char == '\n' or char == ' ':
+            return ''
+        else:
+            return char
+
     def isPrivateToken(self, token) -> str:
         """
         Verifica se é um token privado.
