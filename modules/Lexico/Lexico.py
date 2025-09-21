@@ -12,6 +12,8 @@ PRIVATE_TOKENS = 'private_tokens.yml'
 IDENTIFIERS = 'identifiers.yml'
 
 class Lexico(ILexico):
+    line: int = 1
+    column: int = 1
     privateTokens: Token
     """
     Tokens privados da linguagem
@@ -75,6 +77,9 @@ class Lexico(ILexico):
     def setLogicMode(self):
         self.mode = LexicoModes.LOGIC
 
+    def setCharMode(self):
+        self.mode = LexicoModes.CHAR
+
     def generateOutput(self):
         """
         Gera o output de acordo com os dados de entrada
@@ -85,12 +90,21 @@ class Lexico(ILexico):
         index = 0
         while(index < len(self.inputDataFile)):
             char = self.inputDataFile[index]
+            self.computeLine(char)
 
             if char == '"' and self.mode == LexicoModes.READING:
                 output+=word
                 word=""
                 self.evenCountBars = True
                 self.setStringMode()
+
+            if char == "'" and self.mode == LexicoModes.READING:
+                if self.isPrivateToken(word):
+                    output += self.outputPrivateToken(word)
+                else:
+                    output += self.loadtIdentifier(word)
+                word = ""
+                self.setCharMode()
 
             if word + char == "/*" and self.mode == LexicoModes.READING:
                 self.setCommentMode()
@@ -143,6 +157,14 @@ class Lexico(ILexico):
                     self.setReadingMode()
                 else:
                     word+=self.computeChar(char)
+            elif self.mode == LexicoModes.CHAR:
+                word += char
+                if(char == "'"):
+                    if len(word) >= 2:
+                        # terminando a leitura de caractere
+                        output += self.validateCharWord(word)
+                        word=""
+                        self.setReadingMode()
             elif self.mode == LexicoModes.STRING:
                 word+=self.computeChar(char)
                 if char == '\\':
@@ -162,15 +184,8 @@ class Lexico(ILexico):
                         else:
                             word+=self.computeChar(char)
                     else:
-                        if word == '\n' or word == ' ':
-                            output+=word
-                            word=self.computeChar(char)
-                        else:
-                            if(self.isValidIdentifier(word)):
-                                output += self.loadtIdentifier(word)
-                            else:
-                                print(f"ERRO AO CARREGAR IDENTIFICAR: {word}")
-                            word=self.computeChar(char)
+                        output += self.loadtIdentifier(word)
+                        word=self.computeChar(char)
                 else:
                     if self.isPrivateToken(word):
                         output += self.outputPrivateToken(word)
@@ -178,8 +193,6 @@ class Lexico(ILexico):
                     word+=self.computeChar(char)
                 if char == '\n' or char == ' ':
                     output+=char
-            else:
-                word += self.computeChar(char)
             
             index+=1
 
@@ -191,6 +204,18 @@ class Lexico(ILexico):
         word = ""
         return output
     
+    def printError(self, word: str) -> str:
+        if len(word) > 1 and word != " ":
+            return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
+        return ""
+    
+    def computeLine(self, char):
+        if char == '\n':
+            self.line+=1
+            self.column=1
+        else:
+            self.column+=1
+    
     def isValidIdentifier(self, word: str) -> bool:
         # não pode incirar com número...
         return [True if self.isLetter(i) or i == '_' else False for i in word]
@@ -200,6 +225,27 @@ class Lexico(ILexico):
         Verifica se é um caractere de quebra.
         """
         return self.isLetter(char) or self.isNumber(char) or self.isDot(char)
+    
+    def validateCharWord(self, word: str) -> str:
+        lenWord = len(word)
+        if lenWord > 4:
+            print(f"Erro ao ler um tipo caractere na linha {self.line} e coluna {self.column - len(word)}")
+            return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
+        else:
+            if lenWord == 4 :
+                print("WORD "+word[1])
+                if word[1] == "\\":
+                    return self.identifiers.get('char', '').get('output').replace('{VALUE}', word)
+                else:
+                    print(f"Barra não foi inserida na linha {self.line} e coluna {self.column - len(word)}")
+                    return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
+            else:
+                if(lenWord > 2):
+                    if word[1] == '\\':
+                        print(f"Precisa escapar a barra na linha {self.line} e coluna {self.column - len(word)}")
+                        return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
+                return self.identifiers.get('char', '').get('output').replace('{VALUE}', word)
+        return ""
                 
     def isLetter(self, char: str) -> bool:
         numberOfChar = ord(char)
@@ -239,10 +285,11 @@ class Lexico(ILexico):
         """
         Transforma o valor do token pelo valor de saída adequado.
         """ 
-        if word:
+        if self.isValidIdentifier(word):
             return self.identifiers.get('id', '').get('output').replace('{VALUE}', word)
-        else:
-            return ''
+        elif len(word) > 1 and word != " " and word != '\\n':
+            return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
+        return ""
     
     def parseInt(self, number) -> float | None:
         """

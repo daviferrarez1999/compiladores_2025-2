@@ -12,7 +12,7 @@ int test() {
 
 /*Mais teste*/if(=!=x1 <= 32) b = 10;
 
-int teste = ['id',asdas,asd.dd, 2332.2]
+int teste = ['\id',asdas,asd.dd, 2332.2]
 
 
 '\n'

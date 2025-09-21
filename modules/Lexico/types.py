@@ -14,3 +14,4 @@ class LexicoModes(Enum):
     NUMBER = "NUMBER"
     FLOAT = "FLOAT"
     LOGIC = "LOGIC"
+    CHAR = "CHAR"

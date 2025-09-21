@@ -6,3 +6,7 @@ string:
   output: <STR,{VALUE}>
 float:
   output: <FLOAT,{VALUE}>
+char: 
+  output: <CHAR,{VALUE}>
+error: 
+  output: <ERROR,{VALUE}>
