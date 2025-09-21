@@ -229,7 +229,7 @@ class Lexico(ILexico):
     def validateCharWord(self, word: str) -> str:
         lenWord = len(word)
         if lenWord > 4:
-            print(f"Erro ao ler um tipo caractere na linha {self.line} e coluna {self.column - len(word)}")
+            print(f"Erro ao ler um tipo caractere na linha {self.line} e coluna {self.column}")
             return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
         else:
             if lenWord == 4 :
@@ -237,12 +237,12 @@ class Lexico(ILexico):
                 if word[1] == "\\":
                     return self.identifiers.get('char', '').get('output').replace('{VALUE}', word)
                 else:
-                    print(f"Barra não foi inserida na linha {self.line} e coluna {self.column - len(word)}")
+                    print(f"Barra não foi inserida na linha {self.line} e coluna {self.column}")
                     return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
             else:
                 if(lenWord > 2):
                     if word[1] == '\\':
-                        print(f"Precisa escapar a barra na linha {self.line} e coluna {self.column - len(word)}")
+                        print(f"Precisa escapar a barra na linha {self.line} e coluna {self.column}")
                         return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
                 return self.identifiers.get('char', '').get('output').replace('{VALUE}', word)
         return ""
