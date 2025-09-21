@@ -24,6 +24,14 @@ class Lexico(ILexico):
     """
     Dados de entrada
     """
+    line = 1
+    """
+    Linha da leitura
+    """
+    column = 0
+    """
+    Coluna da leitura
+    """
     mode: LexicoModes
     fs: IFileSystem
 
@@ -65,6 +73,9 @@ class Lexico(ILexico):
 
     def setStringMode(self):
         self.mode = LexicoModes.STRING
+    
+    def setCharMode(self):
+        self.mode = LexicoModes.CHAR
 
     def setNumberMode(self):
         self.mode = LexicoModes.NUMBER
@@ -91,6 +102,10 @@ class Lexico(ILexico):
                 word=""
                 self.evenCountBars = True
                 self.setStringMode()
+            
+            if word == '\'' and self.mode == LexicoModes.READING:
+                word=""
+                self.setCharMode()
 
             if word + char == "/*" and self.mode == LexicoModes.READING:
                 self.setCommentMode()
@@ -153,6 +168,19 @@ class Lexico(ILexico):
                         word = ""
                         self.setReadingMode()
                     self.evenCountBars = True
+            elif self.mode == LexicoModes.CHAR:
+                if ((len(word) == 0) or (len(word) == 1 and word[0] != '\\') or (len(word) == 2 and word[0] == '\\')) and char == '\'':
+                    output += self.identifiers.get("char", '').get('output').replace('{VALUE}', word)
+                    word=""
+                    self.setReadingMode()
+                elif len(word) == 0 or (len(word) == 1 and word[0] == '\\'):
+                    word+=char
+                else:
+                    print(f"ERRO LENDO CHAR, caractere inválido em ({self.line},{self.column})")
+                    print(word)
+                    word=char
+                    self.setReadingMode()
+            
             elif self.mode == LexicoModes.READING:
                 if not (self.isLetter(char) or char == '_' or self.isNumber(char)):
                     if self.isPrivateToken(word):
@@ -163,13 +191,15 @@ class Lexico(ILexico):
                             word+=self.computeChar(char)
                     else:
                         if word == '\n' or word == ' ':
+                            # if word == '\n':
+                            #     self.newLine(word)
                             output+=word
                             word=self.computeChar(char)
                         else:
                             if(self.isValidIdentifier(word)):
                                 output += self.loadtIdentifier(word)
                             else:
-                                print(f"ERRO AO CARREGAR IDENTIFICAR: {word}")
+                                1#print(f"ERRO AO CARREGAR IDENTIFICADOR: {word}")
                             word=self.computeChar(char)
                 else:
                     if self.isPrivateToken(word):
@@ -177,11 +207,14 @@ class Lexico(ILexico):
                         word = ""
                     word+=self.computeChar(char)
                 if char == '\n' or char == ' ':
+                    # if char == '\n':
+                    #     self.newLine(word)
                     output+=char
             else:
                 word += self.computeChar(char)
             
             index+=1
+            self.column+=1
 
         if self.mode == LexicoModes.READING:
             if(self.isPrivateToken(word)):
@@ -190,6 +223,12 @@ class Lexico(ILexico):
                 output += self.loadtIdentifier(word)
         word = ""
         return output
+
+    def newLine(self,word):
+        print(f"({self.line},{self.column},{word})")
+        self.line+=1
+        self.column=-1
+
     
     def isValidIdentifier(self, word: str) -> bool:
         # não pode incirar com número...
@@ -215,6 +254,8 @@ class Lexico(ILexico):
     
     def computeChar(self, char: str) -> str:
         if char == '\n' or char == ' ':
+            if char == '\n' and self.mode == LexicoModes.READING:
+                self.newLine("computeChar")
             return ''
         else:
             return char

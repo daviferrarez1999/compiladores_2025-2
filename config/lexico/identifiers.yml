@@ -4,5 +4,7 @@ id:
   output: <ID,{VALUE}>
 string:
   output: <STR,{VALUE}>
+char:
+  output: <CHAR,{VALUE}>
 float:
   output: <FLOAT,{VALUE}>

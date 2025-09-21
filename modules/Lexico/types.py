@@ -11,6 +11,7 @@ class LexicoModes(Enum):
     READING = "READING"
     COMMENT = "COMMENT"
     STRING = "STRING"
+    CHAR = "CHAR"
     NUMBER = "NUMBER"
     FLOAT = "FLOAT"
     LOGIC = "LOGIC"
