@@ -218,6 +218,11 @@ class Lexico(ILexico):
     
     def isValidIdentifier(self, word: str) -> bool:
         # não pode incirar com número...
+        if len(word) > 0:
+            if not (word[0] == '_' or self.isLetter(word[0])):
+                return False
+        else:
+            return False
         return [True if self.isLetter(i) or i == '_' else False for i in word]
     
     def isNumberOrLetterOrDot(self, char: str) -> bool:
@@ -288,6 +293,7 @@ class Lexico(ILexico):
         if self.isValidIdentifier(word):
             return self.identifiers.get('id', '').get('output').replace('{VALUE}', word)
         elif len(word) > 1 and word != " " and word != '\\n':
+            print(f"Erro ao carregar identificador na linha {self.line} e coluna {self.column}")
             return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
         return ""
     
