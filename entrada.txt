@@ -42,4 +42,4 @@ leu letra ou \
 linha e coluna
 mapear erros
 
-passar pro relatório
+passar pro relatório.
