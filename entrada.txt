@@ -1,45 +1,5 @@
-int texto= 10;
-t__exto = t_1231exto + 2;
-string x = "ola \" \\";
+int main(int a, int b, string c) {
+    char teste[1000];
+    readln(&teste);
 
-/*Teste
-Testando
-*/
-
-int test() {
-    int a == 20;
 }
-
-/*Mais teste*/if(=!=x1 <= 32) b = 10;
-
-int teste = ['\id',asdas,asd.dd, 2332.2]
-
-
-'\n'
-'\\'
-""
-
-TODO
-Leitura de char '' observar os casos '\n' que é valido
-leu letra ou \ 
- -> ainda no modo leitura de char proxima iteracao
-    word = 'a ou '\
-    char == '
-        if self.isletra(word[-1]):
-            if len(word) == 3 and len(word) == 2:
-                '\a ou 'a
-            else:
-                ERRO
-            output char
-        else
-            if char == '\' ou char '/' '{' usar table ascii dentro do range
-                válido
-            else
-                inválido
-            some com o word + char printa erro
-        
-
-linha e coluna
-mapear erros
-
-passar pro relatório

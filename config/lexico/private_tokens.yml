@@ -1,5 +1,3 @@
-for:
-  output: <FOR>
 if:
   output: <IF>
 while:
@@ -14,6 +12,12 @@ return:
   output: <TRUE>
 "false":
   output: <FALSE>
+float:
+  output: <FLOAT>
+char:
+  output: <CHAR>
+bool:
+  output: <BOOL>
 ",":
   output: <COMMA>
 "[":
@@ -38,6 +42,8 @@ int:
   output: <DECREMENT>
 "++":
   output: <INCREMENT>
+"&":
+  output: <ADDRESS>
 "!":
   output: <NEG>
 "=":

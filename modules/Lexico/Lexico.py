@@ -73,10 +73,7 @@ class Lexico(ILexico):
 
     def setFloatMode(self):
         self.mode = LexicoModes.FLOAT
-
-    def setLogicMode(self):
-        self.mode = LexicoModes.LOGIC
-
+        
     def setCharMode(self):
         self.mode = LexicoModes.CHAR
 
@@ -132,11 +129,12 @@ class Lexico(ILexico):
                     word += self.computeChar(char)
                 elif len(word) == 1:
                     # ERRO
-                    print("ERRO LENDO NUMERO, ponto sozinho.")
+                    output+= self.printError(word)
                     word=self.computeChar(char)
+                    self.setReadingMode()
                 else:
                     output+= self.identifiers.get('float', '').get('output').replace('{VALUE}', word)
-                    word=self.computeChar(char)
+                    word = self.computeChar(char)
                     self.setReadingMode()
             elif self.mode == LexicoModes.NUMBER:
                 if self.isNumber(char):
@@ -150,10 +148,7 @@ class Lexico(ILexico):
                     self.setReadingMode()
             elif self.mode == LexicoModes.COMMENT:
                 if word[-2:] == "*/":
-                    if char == '\n':
-                        word=""
-                    else:
-                        word=self.computeChar(char)
+                    word=self.computeChar(char)
                     self.setReadingMode()
                 else:
                     word+=self.computeChar(char)
@@ -189,10 +184,12 @@ class Lexico(ILexico):
                 else:
                     if self.isPrivateToken(word):
                         output += self.outputPrivateToken(word)
+                        index-=1
                         word = ""
-                    word+=self.computeChar(char)
-                if char == '\n' or char == ' ':
-                    output+=char
+                    else:
+                        word+=self.computeChar(char)
+            if self.mode == LexicoModes.READING and (char == '\n' or char == ' '):
+                output+=char
             
             index+=1
 
@@ -201,11 +198,29 @@ class Lexico(ILexico):
                 output += self.outputPrivateToken(word)
             else:
                 output += self.loadtIdentifier(word)
+        elif self.mode == LexicoModes.CHAR:
+            output += self.validateCharWord(word)
+        elif self.mode == LexicoModes.COMMENT:
+            output+=self.printError(word)
+        elif self.mode == LexicoModes.FLOAT:
+            if len(word) == 1 or word[-1] == '.':
+                # ERRO
+                output+=self.printError(word)
+                word=self.computeChar(char)
+                self.setReadingMode()
+            else:
+                output+= self.identifiers.get('float', '').get('output').replace('{VALUE}', word)
+                word=self.computeChar(char)
+        elif self.mode == LexicoModes.NUMBER:
+            output+= self.identifiers.get('number', '').get('output').replace('{VALUE}', word)
+        elif self.mode == LexicoModes.STRING:
+            output+=self.printError(word)
         word = ""
         return output
     
     def printError(self, word: str) -> str:
         if len(word) > 1 and word != " ":
+            print(f"Erro ao ler token \"{word}\" na linha {self.line} e coluna {self.column}")
             return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
         return ""
     
@@ -234,23 +249,18 @@ class Lexico(ILexico):
     def validateCharWord(self, word: str) -> str:
         lenWord = len(word)
         if lenWord > 4:
-            print(f"Erro ao ler um tipo caractere na linha {self.line} e coluna {self.column}")
-            return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
+            return self.printError(word)
         else:
             if lenWord == 4 :
-                print("WORD "+word[1])
                 if word[1] == "\\":
                     return self.identifiers.get('char', '').get('output').replace('{VALUE}', word)
                 else:
-                    print(f"Barra não foi inserida na linha {self.line} e coluna {self.column}")
-                    return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
+                    return self.printError(word)
             else:
                 if(lenWord > 2):
                     if word[1] == '\\':
-                        print(f"Precisa escapar a barra na linha {self.line} e coluna {self.column}")
-                        return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
+                        return self.printError(word)
                 return self.identifiers.get('char', '').get('output').replace('{VALUE}', word)
-        return ""
                 
     def isLetter(self, char: str) -> bool:
         numberOfChar = ord(char)
@@ -293,8 +303,7 @@ class Lexico(ILexico):
         if self.isValidIdentifier(word):
             return self.identifiers.get('id', '').get('output').replace('{VALUE}', word)
         elif len(word) > 1 and word != " " and word != '\\n':
-            print(f"Erro ao carregar identificador na linha {self.line} e coluna {self.column}")
-            return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
+            return self.printError(word)
         return ""
     
     def parseInt(self, number) -> float | None:

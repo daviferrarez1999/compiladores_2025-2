@@ -4,6 +4,8 @@ id:
   output: <ID,{VALUE}>
 string:
   output: <STR,{VALUE}>
+bool: 
+  output: <BOOL,{VALUE}>
 float:
   output: <FLOAT,{VALUE}>
 char: 
