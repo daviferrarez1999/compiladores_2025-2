@@ -99,7 +99,7 @@ class Lexico(ILexico):
                 if self.isPrivateToken(word):
                     output += self.outputPrivateToken(word)
                 else:
-                    output += self.loadtIdentifier(word)
+                    output += self.loadIdentifier(word)
                 word = ""
                 self.setCharMode()
 
@@ -179,7 +179,7 @@ class Lexico(ILexico):
                         else:
                             word+=self.computeChar(char)
                     else:
-                        output += self.loadtIdentifier(word)
+                        output += self.loadIdentifier(word)
                         word=self.computeChar(char)
                 else:
                     if self.isPrivateToken(word):
@@ -197,7 +197,7 @@ class Lexico(ILexico):
             if(self.isPrivateToken(word)):
                 output += self.outputPrivateToken(word)
             else:
-                output += self.loadtIdentifier(word)
+                output += self.loadIdentifier(word)
         elif self.mode == LexicoModes.CHAR:
             output += self.validateCharWord(word)
         elif self.mode == LexicoModes.COMMENT:
@@ -288,7 +288,7 @@ class Lexico(ILexico):
             return privateToken.get('output', '')
         return ''
     
-    def loadtIdentifier(self, word):
+    def loadIdentifier(self, word):
         """
         Transforma o valor do token pelo valor de saída adequado.
         """ 
