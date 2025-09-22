@@ -74,9 +74,6 @@ class Lexico(ILexico):
     def setFloatMode(self):
         self.mode = LexicoModes.FLOAT
 
-    def setLogicMode(self):
-        self.mode = LexicoModes.LOGIC
-
     def setCharMode(self):
         self.mode = LexicoModes.CHAR
 
@@ -122,11 +119,7 @@ class Lexico(ILexico):
                 continue
 
             if len(word) == 0 and self.isNumber(char) and self.mode == LexicoModes.READING:
-                if  self.computeChar(char) == '':
-                    word=''
-                    output+=char
-                else:
-                    word+=char
+                word += self.computeChar(char)
                 self.setNumberMode()
                 index+=1
                 continue
@@ -138,45 +131,28 @@ class Lexico(ILexico):
                     # ERRO
                     print(f"Erro ao ler um tipo float na linha {self.line} e coluna {self.column}")
                     output+=self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
-                    if self.computeChar(char) == '':
-                        word=""
-                        output+=char
-                    else:
-                        word=char
+                    word = self.computeChar(char)
                     self.setReadingMode()
                 else:
                     output+= self.identifiers.get('float', '').get('output').replace('{VALUE}', word)
-                    if self.computeChar(char) == '':
-                        word=""
-                        output+=char
-                    else:
-                        word+=char
+                    word = self.computeChar(char)
                     self.setReadingMode()
             elif self.mode == LexicoModes.NUMBER:
                 if self.isNumber(char):
                     word+=self.computeChar(char)
                 elif self.isDot(char):
-                    if self.computeChar(char) == '':
-                        word=''
-                        output+=char
-                    else:
-                        word+=char
+                    word += self.computeChar(char)
                     self.setFloatMode()
                 else:
                     output+= self.identifiers.get('number', '').get('output').replace('{VALUE}', word)
-                    if self.computeChar(char) == '':
-                        word=''
-                        output+=char
-                    else:
-                        word+=char
+                    word = self.computeChar(char)
                     self.setReadingMode()
             elif self.mode == LexicoModes.COMMENT:
                 if word[-2:] == "*/":
-                    if char == '\n':
-                        word=""
-                    else:
-                        word=self.computeChar(char)
+                    word=self.computeChar(char)
                     self.setReadingMode()
+                    index+=1
+                    continue
                 else:
                     word+=self.computeChar(char)
             elif self.mode == LexicoModes.CHAR:
@@ -213,8 +189,9 @@ class Lexico(ILexico):
                         output += self.outputPrivateToken(word)
                         word = ""
                     word+=self.computeChar(char)
-                if char == '\n' or char == ' ':
-                    output+=char
+
+            if (char == '\n' or char == ' ') and self.mode == LexicoModes.READING:
+                output+=char
             
             index+=1
 
@@ -238,8 +215,6 @@ class Lexico(ILexico):
             else:
                 output+= self.identifiers.get('float', '').get('output').replace('{VALUE}', word)
                 word=self.computeChar(char)
-        elif self.mode == LexicoModes.LOGIC:
-            1# Isso nem foi implementado
         elif self.mode == LexicoModes.NUMBER:
             output+= self.identifiers.get('number', '').get('output').replace('{VALUE}', word)
         elif self.mode == LexicoModes.STRING:
@@ -248,8 +223,6 @@ class Lexico(ILexico):
 
         word = ""
         return output
-    
-    
     
     def printError(self, word: str) -> str:
         """
@@ -288,7 +261,7 @@ class Lexico(ILexico):
             return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
         else:
             if lenWord == 4 :
-                print("WORD "+word[1])
+                # print("WORD "+word[1])
                 if word[1] == "\\":
                     return self.identifiers.get('char', '').get('output').replace('{VALUE}', word)
                 else:

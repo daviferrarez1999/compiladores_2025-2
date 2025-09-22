@@ -2,6 +2,7 @@ int texto= 10;
 t__exto = t_1231exto + 2;
 string x = "ola \" \\";
 
+45.2;
 /*Teste
 Testando
 */
