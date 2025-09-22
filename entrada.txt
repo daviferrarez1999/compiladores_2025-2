@@ -44,7 +44,6 @@ mapear erros
 
 passar pro relatório
 
-adicionar erro de todos de fim de arquivo
 verificar erros de todos durante leitura'
 
 /*
