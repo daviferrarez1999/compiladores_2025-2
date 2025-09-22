@@ -222,7 +222,7 @@ class Lexico(ILexico):
             output+=self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
 
         word = ""
-        return output
+        return output+"<EOF>"
     
     def printError(self, word: str) -> str:
         """
