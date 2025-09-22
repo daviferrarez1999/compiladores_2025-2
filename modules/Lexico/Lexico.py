@@ -12,7 +12,7 @@ PRIVATE_TOKENS = 'private_tokens.yml'
 IDENTIFIERS = 'identifiers.yml'
 
 class Lexico(ILexico):
-    line: int = 0
+    line: int = 1
     column: int = 0
     privateTokens: Token
     """
