@@ -238,12 +238,6 @@ class Lexico(ILexico):
             return False
         return [True if self.isLetter(i) or i == '_' else False for i in word]
     
-    def isNumberOrLetterOrDot(self, char: str) -> bool:
-        """
-        Verifica se é um caractere de quebra.
-        """
-        return self.isLetter(char) or self.isNumber(char) or self.isDot(char)
-    
     def validateCharWord(self, word: str) -> str:
         lenWord = len(word)
         if lenWord > 4:
