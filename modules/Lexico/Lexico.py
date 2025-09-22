@@ -204,7 +204,6 @@ class Lexico(ILexico):
             output+=self.printError(word)
         elif self.mode == LexicoModes.FLOAT:
             if len(word) == 1 or word[-1] == '.':
-                # ERRO
                 output+=self.printError(word)
                 word=self.computeChar(char)
                 self.setReadingMode()
@@ -232,7 +231,6 @@ class Lexico(ILexico):
             self.column+=1
     
     def isValidIdentifier(self, word: str) -> bool:
-        # não pode incirar com número...
         if len(word) > 0:
             if not (word[0] == '_' or self.isLetter(word[0])):
                 return False
@@ -304,17 +302,7 @@ class Lexico(ILexico):
             return self.identifiers.get('id', '').get('output').replace('{VALUE}', word)
         elif len(word) > 1 and word != " " and word != '\\n':
             return self.printError(word)
-        return ""
-    
-    def parseInt(self, number) -> float | None:
-        """
-        Transforma o valor em numérico com "safe parse".
-        """
-        try:
-            return float(number)
-        except ValueError:
-            return None
-        
+        return ""        
         
     def input(self, path):
         self.inputDataFile = self.fs.downloadFile(path)
