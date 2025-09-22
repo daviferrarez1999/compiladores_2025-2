@@ -55,6 +55,11 @@ float = 65.;
 111
 teste
 
+char character = 'c';
+int inteiro = 1;
+float floater = 1.0;
+bool booleano = true;
+
 \
 
 "strings

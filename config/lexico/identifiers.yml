@@ -8,5 +8,7 @@ float:
   output: <FLOAT,{VALUE}>
 char: 
   output: <CHAR,{VALUE}>
+bool: 
+  output: <BOOL,{VALUE}>
 error: 
   output: <ERROR,{VALUE}>
