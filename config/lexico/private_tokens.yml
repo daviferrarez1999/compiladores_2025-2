@@ -34,6 +34,12 @@ return:
   output: <MINUS>
 int:
   output: <INT>
+float:
+  output: <FLOAT>
+char:
+  output: <CHAR>
+bool:
+  output: <BOOL>
 "--":
   output: <DECREMENT>
 "++":

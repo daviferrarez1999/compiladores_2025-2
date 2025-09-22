@@ -2,6 +2,7 @@ int texto= 10;
 t__exto = t_1231exto + 2;
 string x = "ola \" \\";
 
+45.2;
 /*Teste
 Testando
 */
@@ -13,7 +14,7 @@ int test() {
 /*Mais teste*/if(=!=x1 <= 32) b = 10;
 
 int teste = ['\id',asdas,asd.dd, 2332.2]
-
+.
 
 '\n'
 '\\'
@@ -43,3 +44,27 @@ linha e coluna
 mapear erros
 
 passar pro relatório
+
+verificar erros de todos durante leitura'
+
+/*
+Testando de novo*/
+
+float = 65.;
+1.
+111
+teste
+
+char character = 'c';
+int inteiro = 1;
+float floater = 1.0;
+bool booleano = true;
+
+\
+
+"strings
+nunca
+estão
+quebradas
+em
+linhas?
