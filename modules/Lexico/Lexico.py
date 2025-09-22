@@ -12,8 +12,8 @@ PRIVATE_TOKENS = 'private_tokens.yml'
 IDENTIFIERS = 'identifiers.yml'
 
 class Lexico(ILexico):
-    line: int = 1
-    column: int = 1
+    line: int = 0
+    column: int = 0
     privateTokens: Token
     """
     Tokens privados da linguagem
