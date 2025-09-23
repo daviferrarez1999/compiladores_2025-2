@@ -127,7 +127,7 @@ class Lexico(ILexico):
             if self.mode == LexicoModes.FLOAT:
                 if self.isNumber(char):
                     word += self.computeChar(char)
-                elif len(word) == 1:
+                elif len(word) == 1 or word[-1] == '.':
                     # ERRO
                     output+= self.printError(word)
                     word=self.computeChar(char)
