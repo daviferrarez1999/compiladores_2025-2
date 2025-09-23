@@ -215,7 +215,7 @@ class Lexico(ILexico):
         elif self.mode == LexicoModes.STRING:
             output+=self.printError(word)
         word = ""
-        return output
+        return output+"<EOF>"
     
     def printError(self, word: str) -> str:
         if len(word) > 1 and word != " ":
