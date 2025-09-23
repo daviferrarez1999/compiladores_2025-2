@@ -13,5 +13,4 @@ class LexicoModes(Enum):
     STRING = "STRING"
     NUMBER = "NUMBER"
     FLOAT = "FLOAT"
-    LOGIC = "LOGIC"
     CHAR = "CHAR"
