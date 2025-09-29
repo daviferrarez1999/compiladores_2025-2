@@ -201,7 +201,8 @@ class Lexico(ILexico):
         elif self.mode == LexicoModes.CHAR:
             output += self.validateCharWord(word)
         elif self.mode == LexicoModes.COMMENT:
-            output+=self.printError(word)
+            if word[-2:] != '*/':
+                output+=self.printError(word)
         elif self.mode == LexicoModes.FLOAT:
             if len(word) == 1 or word[-1] == '.':
                 output+=self.printError(word)
@@ -218,7 +219,7 @@ class Lexico(ILexico):
         return output+"<EOF>"
     
     def printError(self, word: str) -> str:
-        if len(word) > 1 and word != " ":
+        if len(word) > 0:
             print(f"Erro ao ler token \"{word}\" na linha {self.line} e coluna {self.column}")
             return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
         return ""
@@ -294,9 +295,8 @@ class Lexico(ILexico):
         """ 
         if self.isValidIdentifier(word):
             return self.identifiers.get('id', '').get('output').replace('{VALUE}', word)
-        elif len(word) > 1 and word != " " and word != '\\n':
-            return self.printError(word)
-        return ""        
+        else:
+            return self.printError(word)  
         
     def input(self, path):
         self.inputDataFile = self.fs.downloadFile(path)
