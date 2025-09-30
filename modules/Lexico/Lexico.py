@@ -13,7 +13,9 @@ IDENTIFIERS = 'identifiers.yml'
 
 class Lexico(ILexico):
     line: int = 1
+    startTokenLine: int = 1
     column: int = 0
+    startTokenColumn: int = 0
     privateTokens: Token
     """
     Tokens privados da linguagem
@@ -88,10 +90,12 @@ class Lexico(ILexico):
         while(index < len(self.inputDataFile)):
             char = self.inputDataFile[index]
             self.computeLine(char)
+            if len(word) == 0:
+                self.saveTokenIndex()           
 
             if char == '"' and self.mode == LexicoModes.READING:
                 output+=word
-                word=""
+                word = ""
                 self.evenCountBars = True
                 self.setStringMode()
 
@@ -107,9 +111,9 @@ class Lexico(ILexico):
                 self.setCommentMode()
             
             if word == "!" and self.isPrivateToken(word+char) and self.mode == LexicoModes.READING:
-                index+=1
-                output+= self.outputPrivateToken(word+char)
-                word="" 
+                index += 1
+                output += self.outputPrivateToken(word+char)
+                word = "" 
                 continue
 
             if len(word) == 0 and self.isDot(char) and self.mode == LexicoModes.READING:
@@ -121,7 +125,7 @@ class Lexico(ILexico):
             if len(word) == 0 and self.isNumber(char) and self.mode == LexicoModes.READING:
                 word += self.computeChar(char)
                 self.setNumberMode()
-                index+=1
+                index += 1
                 continue
             
             if self.mode == LexicoModes.FLOAT:
@@ -130,25 +134,29 @@ class Lexico(ILexico):
                 elif len(word) == 1 or word[-1] == '.':
                     # ERRO
                     output+= self.printError(word)
-                    word=self.computeChar(char)
+                    index -= 1
+                    word = ""
                     self.setReadingMode()
                 else:
                     output+= self.identifiers.get('float', '').get('output').replace('{VALUE}', word)
-                    word = self.computeChar(char)
+                    index -= 1
+                    word = ""
                     self.setReadingMode()
             elif self.mode == LexicoModes.NUMBER:
                 if self.isNumber(char):
-                    word+=self.computeChar(char)
+                    word += self.computeChar(char)
                 elif self.isDot(char):
-                    word+=self.computeChar(char)
+                    word += self.computeChar(char)
                     self.setFloatMode()
                 else:
                     output+= self.identifiers.get('number', '').get('output').replace('{VALUE}', word)
-                    word=self.computeChar(char)
+                    index -= 1
+                    word = ""
                     self.setReadingMode()
             elif self.mode == LexicoModes.COMMENT:
                 if word[-2:] == "*/":
-                    word=self.computeChar(char)
+                    index -= 1
+                    word = ""
                     self.setReadingMode()
                 else:
                     word+=self.computeChar(char)
@@ -158,10 +166,10 @@ class Lexico(ILexico):
                     if len(word) >= 2:
                         # terminando a leitura de caractere
                         output += self.validateCharWord(word)
-                        word=""
+                        word = ""
                         self.setReadingMode()
             elif self.mode == LexicoModes.STRING:
-                word+=self.computeChar(char)
+                word += self.computeChar(char)
                 if char == '\\':
                     self.evenCountBars = not self.evenCountBars
                 if len(word) > 1 and char == '"':
@@ -175,23 +183,30 @@ class Lexico(ILexico):
                     if self.isPrivateToken(word):
                         if not self.isPrivateToken(word+char):
                             output += self.outputPrivateToken(word)
-                            word=self.computeChar(char)
+                            word = self.computeChar(char)
+                            self.saveTokenIndex()
                         else:
-                            word+=self.computeChar(char)
+                            word += self.computeChar(char)
                     else:
                         output += self.loadIdentifier(word)
-                        word=self.computeChar(char)
+                        word = self.computeChar(char)
+                        self.saveTokenIndex()
                 else:
                     if self.isPrivateToken(word):
                         output += self.outputPrivateToken(word)
-                        index-=1
-                        word = ""
+                        word = self.computeChar(char)
+                        self.saveTokenIndex()
                     else:
-                        word+=self.computeChar(char)
+                        if self.isValidIdentifier(word+char):
+                            word+=self.computeChar(char)
+                        else:
+                            output+= self.printError(word)
+                            index -= 1
+                            word = ""
             if self.mode == LexicoModes.READING and (char == '\n' or char == ' '):
                 output+=char
             
-            index+=1
+            index += 1
 
         if self.mode == LexicoModes.READING:
             if(self.isPrivateToken(word)):
@@ -220,14 +235,18 @@ class Lexico(ILexico):
     
     def printError(self, word: str) -> str:
         if len(word) > 0:
-            print(f"Erro ao ler token \"{word}\" na linha {self.line} e coluna {self.column}")
+            print(f"Erro ao ler token \"{word}\" na linha {self.startTokenLine} e coluna {self.startTokenColumn}")
             return self.identifiers.get('error', '').get('output').replace('{VALUE}', word)
         return ""
+    
+    def saveTokenIndex(self):
+        self.startTokenLine = self.line
+        self.startTokenColumn = self.column
     
     def computeLine(self, char):
         if char == '\n':
             self.line+=1
-            self.column=1
+            self.column=0
         else:
             self.column+=1
     
