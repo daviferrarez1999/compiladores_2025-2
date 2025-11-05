@@ -157,6 +157,8 @@ class Lexico(ILexico):
                 if word[-2:] == "*/":
                     index -= 1
                     word = ""
+                    if char == '\n' or char == ' ':
+                        char = ''
                     self.setReadingMode()
                 else:
                     word+=self.computeChar(char)
