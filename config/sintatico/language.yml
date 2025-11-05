@@ -1,0 +1,109 @@
+Program:
+  - Type Program_1
+
+Program_1:
+  - ID Program_2
+
+Program_2:
+  - IdList Program
+  - FrunctionDecl
+
+FunctionDecl:
+  - ( FormalList ) { VarDecl StmtList } FunctionDecl_1
+
+FunctionDecl_1:
+  - Program
+  - LAMBDA
+
+VarDecl:
+  - Type IdList ; VarDecl
+  - LAMBDA
+
+IdList:
+  - ID Array_1
+
+Array_1:
+  - Array Array_2
+
+Array_2:
+  - ", ID Array_1"
+  - LAMBDA
+
+Array:
+  - [ NUM ]
+  - LAMBDA
+
+FormalRest:
+  - ", Type ID Array FormalRest"
+  - LAMBDA
+
+FormalList:
+  - Type ID Array FormalRest
+  - LAMBDA
+
+Type:
+  - INT
+  - FLOAT
+  - BOOL
+  - ID
+  - CHAR
+  - STR
+
+StmtList_1:
+  - Stmt StmtList_1
+  - LAMBDA
+
+StmtList:
+  - Stmt StmtList_1
+
+Stmt:
+  - "if ( Expr ) Stmt else Stmt"
+  - "while ( Expr ) Stmt"
+  - "break ;"
+  - "print ( ExprList ) ;"
+  - "readln ( Expr ) ;"
+  - "return Expr "
+  - "{ StmtList }"
+  - "ID ( ExprList ) ;"
+  - "Expr "
+
+ExprListTail_1:
+  - ", ExprListTail"
+  - LAMBDA
+
+ExprListTail:
+  - Expr ExprListTail_1
+
+ExprList:
+  - ExprListTail
+  - LAMBDA
+
+Ident:
+  - ( ExprList )
+  - LAMBDA
+
+Primary:
+  - "( Expr )"
+  - "ID Ident_1"
+  - "NUM"
+  - "STR"
+  - "‘ ASCII ’"
+  - "TRUE"
+  - "FALSE"
+
+CmplExpr:
+  - "= Expr"
+  - "BinOp Expr"
+
+AltExpr:
+  - [ Expr ]
+  - CmplExpr
+  - LAMBDA
+
+Expr:
+  - Primary AltExpr
+  - UnaryOp ExtraExpr
+
+ExtraExpr:
+  - Expr
+  - CmplExpr

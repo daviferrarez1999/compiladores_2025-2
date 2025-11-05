@@ -1,4 +1,4 @@
-from modules import lexico
+from modules import lexico, sintatico
 import sys
 
 def main():
@@ -17,8 +17,10 @@ def main():
     print('Arquivo de entrada: ', arquivo)
     print('Iniciando Léxico')
     lexico.input(arquivo)
-    lexico.output()
+    buffer = lexico.output()
     print('Léxico finalizado')
+    sintatico.input(buffer)
+    sintatico.output()
     return None
 
 if __name__ == "__main__":

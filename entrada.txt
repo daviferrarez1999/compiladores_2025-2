@@ -1,3 +1,1 @@
-@# teste123 teste123!=#
-@ ashdiuash1231u2hhuh?Teste 131@@334
-$l3l3#
+int a = b;
