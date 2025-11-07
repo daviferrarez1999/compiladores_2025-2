@@ -1,0 +1,144 @@
+{
+  "Program": [
+    ["Type", "ID", "Decl", "Program'"]
+  ],
+  "Program'": [
+    ["Type", "ID", "Decl", "Program'"],
+    ["ε"]
+  ],
+  "Decl": [
+    ["(", "FormalList", ")", "{", "Type", "VarDecl", "StmtList", "}"],
+    ["DeclVarTail"]
+  ],
+  "DeclVarTail": [
+    ["Array", "IdList", ";"]
+  ],
+  "IdList": [
+    [",", "ID", "Array", "IdList"],
+    ["ε"]
+  ],
+  "Array": [
+    ["[", "NUM", "]"],
+    ["ε"]
+  ],
+  "FormalList": [
+    ["Type", "ID", "Array", "FormalRest"],
+    ["ε"]
+  ],
+  "FormalRest": [
+    [",", "Type", "ID", "Array", "FormalRest"],
+    ["ε"]
+  ],
+  "Type": [
+    ["int"],
+    ["float"],
+    ["bool"],
+    ["ID"],
+    ["char"]
+  ],
+  "Stmt": [
+    ["while", "(", "Expr", ")", "Stmt"],
+    ["break", ";"],
+    ["print", "(", "ExprList", ")", ";"],
+    ["readln", "(", "Expr", ")", ";"],
+    ["return", "Expr", ";"],
+    ["{", "StmtList", "}"],
+    ["if", "(", "Expr", ")", "Stmt", "else", "Stmt"],
+    ["Expr", ";"]
+  ],
+  "ExprList": [
+    ["ε"],
+    ["ExprListTail"]
+  ],
+  "ExprListTail": [
+    ["Expr"],
+    ["Expr", ",", "ExprListTail"]
+  ],
+  "StmtList": [
+    ["Stmt", "StmtList'"]
+  ],
+  "StmtList'": [
+    ["Stmt", "StmtList'"],
+    ["ε"]
+  ],
+  "Expr": [
+    ["OrExpr"]
+  ],
+  "OrExpr": [
+    ["AndExpr", "OrExpr'"]
+  ],
+  "OrExpr'": [
+    ["||", "AndExpr", "OrExpr'"],
+    ["ε"]
+  ],
+  "AndExpr": [
+    ["CompExpr", "AndExpr'"]
+  ],
+  "AndExpr'": [
+    ["&&", "CompExpr", "AndExpr'"],
+    ["ε"]
+  ],
+  "CompExpr": [
+    ["AddExpr", "CompExpr'"]
+  ],
+  "CompExpr'": [
+    ["CompOp", "AddExpr", "CompExpr'"],
+    ["ε"]
+  ],
+  "CompOp": [
+    ["<"],
+    [">"],
+    ["<="],
+    [">="],
+    ["=="],
+    ["!="]
+  ],
+  "AddExpr": [
+    ["MulExpr", "AddExpr'"]
+  ],
+  "AddExpr'": [
+    ["AddOp", "MulExpr", "AddExpr'"],
+    ["ε"]
+  ],
+  "AddOp": [
+    ["+"],
+    ["-"]
+  ],
+  "MulExpr": [
+    ["UnaryExpr", "MultExpr'"]
+  ],
+  "MultExpr'": [
+    ["MulOp", "UnaryExpr", "MulExpr'"],
+    ["ε"]
+  ],
+  "MulOp": [
+    ["*"],
+    ["/"],
+    ["%"]
+  ],
+  "UnaryExpr": [
+    ["UnaryOp", "UnaryExpr"],
+    ["Primary"]
+  ],
+  "UnaryOp": [
+    ["!"],
+    ["++"],
+    ["--"]
+  ],
+  "Primary": [
+    ["ID", "ID'"],
+    ["NUM"],
+    ["LITERAL"],
+    ["'", "ASCII", "'"],
+    ["(", "Expr", ")"],
+    ["[", "Expr", "]"],
+    ["true"],
+    ["false"]
+  ],
+  "ID'": [
+    ["(", "ExprList", ")"],
+    ["++"],
+    ["--"],
+    ["ε"]
+  ]
+}
