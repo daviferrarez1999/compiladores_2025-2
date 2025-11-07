@@ -1,3 +1,18 @@
-@# teste123 teste123!=#
-@ ashdiuash1231u2hhuh?Teste 131@@334
-$l3l3#
+int main(void) {
+    char sourceString[50] = "Hello World";
+    char destinationString[50];
+    char a = '\n';
+    float f = 0.6;
+    int index = 0;
+
+    while (sourceString[index] != '\0') {
+        destinationString[index] = sourceString[index];
+        index++;
+    }
+    destinationString[index] = '\0';
+
+    print("Source String: %s\n", sourceString);
+    print("Copied String: %s\n", destinationString);
+
+    return 0;
+}

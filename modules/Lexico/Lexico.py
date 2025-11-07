@@ -91,10 +91,13 @@ class Lexico(ILexico):
             char = self.inputDataFile[index]
             self.computeLine(char)
             if len(word) == 0:
-                self.saveTokenIndex()           
+                self.saveTokenIndex()
 
             if char == '"' and self.mode == LexicoModes.READING:
-                output+=word
+                if self.isPrivateToken(word):
+                    output += self.outputPrivateToken(word)
+                else:
+                    output += self.loadIdentifier(word)
                 word = ""
                 self.evenCountBars = True
                 self.setStringMode()
@@ -116,13 +119,13 @@ class Lexico(ILexico):
                 word = "" 
                 continue
 
-            if len(word) == 0 and self.isDot(char) and self.mode == LexicoModes.READING:
+            if len(word) > 0 and self.isDot(char) and self.mode == LexicoModes.READING:
                 word += self.computeChar(char)
                 self.setFloatMode()
                 index+=1
                 continue
-
-            if len(word) == 0 and self.isNumber(char) and self.mode == LexicoModes.READING:
+            
+            if ((len(word) == 0 and self.isNumber(char)) or (len(word) == 1 and self.isNumber(word))) and self.mode == LexicoModes.READING:
                 word += self.computeChar(char)
                 self.setNumberMode()
                 index += 1
@@ -131,7 +134,7 @@ class Lexico(ILexico):
             if self.mode == LexicoModes.FLOAT:
                 if self.isNumber(char):
                     word += self.computeChar(char)
-                elif len(word) == 1 or word[-1] == '.':
+                elif word[-1] == '.':
                     # ERRO
                     output+= self.printError(word)
                     index -= 1
@@ -157,6 +160,8 @@ class Lexico(ILexico):
                 if word[-2:] == "*/":
                     index -= 1
                     word = ""
+                    if char == '\n' or char == ' ':
+                        char = ''
                     self.setReadingMode()
                 else:
                     word+=self.computeChar(char)
@@ -169,9 +174,12 @@ class Lexico(ILexico):
                         word = ""
                         self.setReadingMode()
             elif self.mode == LexicoModes.STRING:
-                word += self.computeChar(char)
+                word += char
                 if char == '\\':
                     self.evenCountBars = not self.evenCountBars
+                elif char != '\"':
+                    self.evenCountBars = True
+
                 if len(word) > 1 and char == '"':
                     if self.evenCountBars:
                         output += self.identifiers.get("string", '').get('output').replace('{VALUE}', word)
