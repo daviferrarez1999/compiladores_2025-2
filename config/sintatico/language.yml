@@ -1,37 +1,32 @@
-Program:
-  -
-    - Type
-    - Program_1
-
-Program_1:
-  -
-    - ID
-    - Program_2
-
-Program_2:
+Program2:
   -
     - IdList
     - Program
   -
     - FunctionDecl
-
 FunctionDecl:
   -
-    - (
+    - "("
     - FormalList
-    - )
+    - ")"
     - "{"
     - VarDecl
     - StmtList
     - "}"
-    - FunctionDecl_1
-
-FunctionDecl_1:
+    - FunctionDecl1
+FunctionDecl1:
   -
     - Program
   -
-    - LAMBDA
-
+    - Lambda
+Program1:
+  -
+    - ID
+    - Program2
+Program:
+  -
+    - Type
+    - Program1
 VarDecl:
   -
     - Type
@@ -40,35 +35,37 @@ VarDecl:
     - VarDecl
   -
     - LAMBDA
-
 IdList:
   -
     - ID
-    - Array_1
-
-Array_1:
+    - Array1
+Array2:
+  -
+    - ","
+    - ID
+    - Array1
+  -
+    - LAMBDA
+Array1:
   -
     - Array
-    - Array_2
-
-Array_2:
-  -
-    - ", ID Array_1"
-  -
-    - LAMBDA
-
+    - Array2
 Array:
   -
-    - "[ NUM ]"
+    - "["
+    - NUM
+    - "]"
   -
     - LAMBDA
-
 FormalRest:
   -
-    - ", Type ID Array FormalRest"
+    - ","
+    - Type
+    - ID
+    - Array
+    - FormalRest
   -
     - LAMBDA
-
 FormalList:
   -
     - Type
@@ -77,109 +74,125 @@ FormalList:
     - FormalRest
   -
     - LAMBDA
-
 Type:
   -
-    - INT
+    - int
   -
-    - FLOAT
+    - float
   -
-    - BOOL
+    - bool
   -
     - ID
   -
-    - CHAR
-  -
-    - STR
-
-StmtList_1:
+    - char
+StmtList1:
   -
     - Stmt
-    - StmtList_1
+    - StmtLis1
   -
     - LAMBDA
-
 StmtList:
   -
     - Stmt
-    - StmtList_1
-
+    - StmtList1
 Stmt:
   -
-    - "if ( Expr ) Stmt else Stmt"
+    - if
+    - (
+    - Expr
+    - )
+    - Stmt
+    - else
+    - Stmt
   -
-    - "while ( Expr ) Stmt"
+    - while
+    - (
+    - Expr
+    - )
+    - Stmt
   -
-    - "break ;"
+    - break
+    - ;
   -
-    - "print ( ExprList ) ;"
+    - print
+    - (
+    - ExprList
+    - )
+    - ;
   -
-    - "readln ( Expr ) ;"
+    - readln
+    - (
+    - Expr
+    - )
+    - ;
   -
-    - "return Expr ;"
+    - return
+    - Expr
+    - ;
   -
-    - "{ StmtList }"
+    - "{"
+    - StmtList
+    - "}"
   -
-    - "ID ( ExprList ) ;"
+    - Expr
+    - ;
+ExprListTail1:
   -
-    - "Expr ;"
-
-ExprListTail_1:
-  -
-    - ", ExprListTail"
+    - ","
+    - ExprListTail
   -
     - LAMBDA
-
 ExprListTail:
   -
     - Expr
-    - ExprListTail_1
-
+    - ExprListTail1
 ExprList:
   -
     - ExprListTail
   -
     - LAMBDA
-
 Ident:
   -
-    - "( ExprList )"
+    - "("
+    - ExprList
+    - ")"
   -
     - LAMBDA
-
 Primary:
   -
     - "("
-    - Expr 
+    - Expr
     - ")"
   -
     - ID
-    - Ident_1
+    - Ident
   -
     - NUM
   -
-    - STR
+    - LITERAL
   -
-    - "‘ ASCII ’"
+    - ASCII
   -
-    - TRUE
+    - true
   -
-    - FALSE
-
+    - false
 CmplExpr:
   -
-    - "= Expr"
+    - "="
+    - Expr
   -
-    - "BinOp Expr"
-
+    - OrExpr
+    - Expr
 AltExpr:
   -
-    - "[ Expr ]"
+    - 
+      - "["
+      - Expr
+      - "]"
   -
     - CmplExpr
   -
     - LAMBDA
-
 Expr:
   -
     - Primary
@@ -187,9 +200,101 @@ Expr:
   -
     - UnaryOp
     - ExtraExpr
-
 ExtraExpr:
   -
     - Expr
   -
     - CmplExpr
+UnaryOp:
+  -
+    - ++
+  -
+    - –
+  -
+    - LAMBDA
+OrExpr:
+  -
+    - AndExpr
+    - OrExpr1
+OrExpr1:
+  -
+    - "||"
+    - AndExpr
+    - OrExpr1
+  -
+    - LAMBDA
+AndExpr:
+  -
+    - CompExpr
+    - AndExpr1
+AndExpr1:
+  -
+    - "&&"
+    - CompExpr
+    - AndExpr1
+  -
+    - LAMBDA
+CompExpr:
+  -
+    - AddExpr
+    - CompExpr1
+CompExpr1:
+  -
+    - CompOp
+    - AddExpr
+    - CompExpr1
+  -
+    - LAMBDA
+CompOp:
+  -
+    - "<"
+  -
+    - ">"
+  -
+    - "<="
+  -
+    - ">="
+  -
+    - "=="
+  -
+    - "!="
+AddExpr:
+  -
+    - MulExpr
+    - AddExpr1
+AddExpr1:
+  -
+    - AddOp
+    - MulExpr
+    - AddExpr1
+  -
+    - LAMBDA
+AddOp:
+  -
+    - "+"
+  -
+    - "-"
+MulExpr:
+  -
+    - UnaryExpr
+    - MulExpr1
+MulExpr1:
+  -
+    - MulOp
+    - UnaryExpr
+    - MulExpr1
+  -
+    - LAMBDA
+MulOp:
+  -
+    - "*"
+  -
+    - "/"
+  -
+    - "%"
+UnaryExpr:
+  -
+    - UnaryOp
+    - UnaryExpr
+  -
+    - Primary
