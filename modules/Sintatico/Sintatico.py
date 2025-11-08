@@ -76,29 +76,25 @@ class Sintatico(ISintatico):
             aux = False
             for nt, productions in grammar.items():
                 for prod in productions:
-                    if len(prod) == 0 or prod == [EPSILON]:
+                    if prod == [EPSILON]:
                         if EPSILON not in first[nt]:
                             first[nt].add(EPSILON)
                             aux = True
                         continue
                     for s in prod:
-                        if self.isTerminal(s, grammar):
+                        if self.isTerminal(s,grammar):
                             if s not in first[nt]:
                                 first[nt].add(s)
                                 aux = True
                             break
                         before = len(first[nt])
-                        first[nt].update(first[s] - {EPSILON})
+                        first[nt].update(first[s]-{EPSILON})
                         after = len(first[nt])
                         if after > before:
                             aux = True
 
                         if EPSILON not in first[s]:
                             break
-                    else:
-                        if EPSILON not in first[nt]:
-                            first[nt].add(EPSILON)
-                            aux = True
         return first
 
 
