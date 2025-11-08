@@ -185,10 +185,9 @@ CmplExpr:
     - Expr
 AltExpr:
   -
-    - 
-      - "["
-      - Expr
-      - "]"
+    - "["
+    - Expr
+    - "]"
   -
     - CmplExpr
   -
