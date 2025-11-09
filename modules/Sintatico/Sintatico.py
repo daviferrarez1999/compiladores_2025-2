@@ -9,6 +9,7 @@ from typing import List, cast, Dict
 
 LANGUAGE = 'language.yml'
 TOKENS_FILE = 'private_tokens.yml'
+EPSILON = "LAMBDA"
 
 class Sintatico(ISintatico):
     language: Dict[str, List[List [str]]]
@@ -42,22 +43,24 @@ class Sintatico(ISintatico):
             print(f"{k}: {v}")
 
         #self.dict = tokens
-        self.dict = self.loadTokens()
+        tokens = self.loadTokens()
+        self.dict = {}
+        for key in tokens:
+            value = tokens.get(key).get('output')
+            self.dict.update({value: key})
         self.dict.update({'$':'$'})
         self.first = self.computeFirst(self.language)
+        print(self.first)
         self.follow = self.computeFollow(self.language,self.first)
         self.word = ''
 
         print("Configurações do sintático carregadas")
 
     def loadTokens(self):
-        print("Carregando tokens do sintático")
+        print("Carregando tokens do léxico para o sintático")
         file = self.fs.downloadFile(os.path.join('config', 'lexico', TOKENS_FILE))
         data = yaml.safe_load(file)
         return cast(List[Token], data)
-
-    def nextToken(self):
-        commentMode = False
 
     def printDict(self,dict):
         for k,v in dict.items():
@@ -67,7 +70,6 @@ class Sintatico(ISintatico):
         return s not in grammar
     
     def computeFirst(self,grammar):
-        EPSILON = "LAMBDA"
         first = {nt: set() for nt in grammar}
 
         aux = True
@@ -97,7 +99,6 @@ class Sintatico(ISintatico):
         return first
 
     def computeFollow(self,grammar,first):
-        EPSILON = "LAMBDA"
         initial = 'Program'
         follow = {nt: set() for nt in grammar}
         follow[initial] = {'$'}
@@ -178,35 +179,400 @@ class Sintatico(ISintatico):
 
         return self.resp
 
-    def convert(self,symbol):
-        if symbol in self.dict:
-            return self.dict.get(symbol).get('output')
-        return -1
+    def computeMatchTest(self, type: str):
+        print(type)
+        currentSet = self.first.get(type, set())
+        self.match(currentSet)
 
-    def match(self,token_type):
-        if self.lookahead == token_type:
+    def convert(self, symbol):
+        if symbol in self.dict:
+            return self.dict.get(symbol)
+        return symbol
+
+    def match(self, tokens: set):
+        lookaheadToken = self.getLookAheadToken()
+        if lookaheadToken in list(tokens):
+            print(f"Match: {self.lookahead}")
             self.idx+=1 # avança o índice de leitura
             self.lookahead = self.convert(self.word[self.idx])
         else:
-            raise SyntaxError(f"ERRO: esperado {token_type}, encontrado {self.lookahead}")
+            raise SyntaxError(f"ERRO: tokens esperados: {','.join(list(tokens))}. Foi encontrado {lookaheadToken}")
+
+    def getLookAheadToken(self):
+        if ',' in self.lookahead:
+            # Caso em que é um token interno Precisamos realizar o split do token
+            #<ID,main> precisamos extrair o ID
+            index = 1
+            current = self.lookahead[index] # vamos pular o <
+            token = ""
+            while current != ',':
+                token+=current
+                index+=1
+                current=self.lookahead[index]
+            return token
+        else:
+            return self.lookahead          
+    
+    def computeMatch(self, type: str):
+        print(type)
+        currentSet = self.first.get(type, set())
+        self.match(currentSet)
+
+    def tryComputeMatch(self, type: str):
+        currentSet = self.first.get(type, set())
+        lookaheadToken = self.getLookAheadToken()
+        return lookaheadToken in list(currentSet)
 
     def Program(self):
+        print(self.Program.__name__)
         self.Type()
-        self.Program_1()
+        self.Program1()
 
     def Type(self):
-        if self.lookahead == 'ID':
-            self.match('ID')
+        self.computeMatch('Type')
 
+    def Program1(self):
+        self.computeMatch('Program1')
+        self.Program2()
 
-    def Program_1(self):
-        pass
-    def ID(self):
-        pass
+    def Program2(self):
+        print(self.Program2.__name__)
+        if self.lookahead == '(':
+            self.FunctionDecl()
+        else:
+            self.IdList()
+            self.Program()
+        
     def IdList(self):
-        pass
+        print(self.IdList.__name__)
+        self.match({'ID'})
+        self.Array1()
+
     def FunctionDecl(self):
-        pass
+        self.computeMatch('FunctionDecl')
+        self.FormalList()
+        self.match({')'})
+        self.match({'{'})
+        self.VarDecl()
+        self.StmtList()
+        self.match({'}'})
+        self.FunctionDecl1()
+       
+    def FormalList(self):
+        print(self.FormalList.__name__)
+        self.lambdaWrapper('_FormalList')
+    
+    def _FormalList(self):
+        self.Type()
+        self.match({'ID'})
+        self.Array()
+        self.FormalRest()
+
+    def lambdaWrapper(self, functionName):
+        currentIndex = self.idx
+        try:
+            func = getattr(self, functionName)
+            func()
+        except:
+            print("LAMBDA")
+            self.idx = currentIndex
+            self.lookahead = self.convert(self.word[self.idx])
+
+    def VarDecl(self):
+        print(self.VarDecl.__name__)
+        self.lambdaWrapper('_VarDecl')
+
+    def _VarDecl(self):
+        self.Type()
+        self.IdList()
+        self.match({';'})
+        self.VarDecl()
+
+
+    def StmtList(self):
+        print(self.StmtList.__name__)
+        self.Stmt()
+        self.StmtList1()
+
+    def Stmt(self):
+        print(self.Stmt.__name__)
+        match self.lookahead:
+            case 'if':
+                self.match({'if'})
+                self.match({'('})
+                self.Expr()
+                self.match({')'})
+                self.Stmt()
+                self.match({'else'})
+                self.Stmt()
+            case 'while':
+                self.match({'while'})
+                self.match({'('})
+                self.Expr()
+                self.match({')'})
+                self.Stmt()
+            case 'break':
+                self.match({'break'})
+                self.match({';'})
+            case 'print':
+                self.match({'print'})
+                self.match({'('})
+                self.ExprList()
+                self.match({')'})
+                self.match({';'})
+            case 'readln':
+                self.match({'readln'})
+                self.match({'('})
+                self.Expr()
+                self.match({')'})
+                self.match({';'})
+            case 'return':
+                self.match({'return'})
+                self.Expr()
+                self.match({';'})
+            case '{':
+                self.match({'{'})
+                self.StmtList()
+                self.match({'}'})
+            case _:
+                self.Expr()
+                self.match({';'})
+
+    def Expr(self):
+        print(self.Expr.__name__)
+        if self.tryComputeMatch('Primary'):
+            self.Primary()
+            self.AltExpr()
+        else:
+            self.UnaryOp()
+            self.ExtraExpr()
+
+    def Primary(self):
+        print(self.Primary.__name__)
+        match self.getLookAheadToken():
+            case '(':
+                self.match({'('})
+                self.Expr()
+                self.match({')'})
+            case 'ID':
+                self.match({'ID'})
+                self.Ident()
+            case 'NUM':
+                self.match({'NUM'})
+            case 'LITERAL':
+                self.match({'LITERAL'})
+            case 'true':
+                self.match({'true'})
+            case 'false':
+                self.match({'false'})
+            case _:
+                raise SyntaxError(f"ERRO: unexpected token {self.lookahead}")
+
+    def Ident(self):
+        print(self.Ident.__name__)
+        self.lambdaWrapper('_Ident')        
+        
+    def _Ident(self):
+        self.match({'('})
+        self.ExprList()
+        self.match({')'})
+
+    def AltExpr(self):
+        print(self.AltExpr.__name__)
+        self.lambdaWrapper('_AltExpr')
+
+    def _AltExpr(self):
+        if self.lookahead == '[':
+            self.match({'['})
+            self.Expr()
+            self.match({']'})
+            self.AltExpr1()
+        else:
+            self.CmplExpr()     
+
+    def AltExpr1(self):
+        print(self.AltExpr1.__name__)
+        self.lambdaWrapper('_AltExpr1')  
+
+    def _AltExpr1(self):
+        self.CmplExpr()
+
+    def CmplExpr(self):
+        print(self.CmplExpr.__name__)
+        if self.lookahead == '=':
+            self.match({'='})
+            self.Expr()
+        else:
+            self.OrExpr()
+            self.Expr()
+
+    def OrExpr1(self):
+        print(self.OrExpr1.__name__)
+        self.lambdaWrapper('_OrExpr1')
+
+    def _OrExpr1(self):
+        self.match({'||'})
+        self.AndExpr()
+        self.OrExpr1()
+
+    def OrExpr(self):
+        print(self.OrExpr.__name__)
+        self.AndExpr()
+        self.OrExpr1()
+
+    def AndExpr(self):
+        print(self.AndExpr.__name__)
+        self.CompExpr()
+        self.AndExpr1()
+
+    def AndExpr1(self):
+        print(self.AndExpr1.__name__)
+        self.lambdaWrapper('_AndExpr1')
+    
+    def _AndExpr1(self):
+        self.match('&&')
+        self.CompExpr()
+        self.AndExpr1()
+
+    def CompExpr(self):
+        print(self.CompExpr.__name__)
+        self.AddExpr()
+        self.CompExpr1()
+
+    def CompExpr1(self):
+        print(self.CompExpr1.__name__)
+        self.lambdaWrapper('_CompExpr1')
+
+    def _CompExpr1(self):
+        self.CompOp()
+        self.AddExpr()
+        self.CompExpr1()
+
+    def CompOp(self):
+        self.computeMatch('CompOp')
+
+    def AddExpr(self):
+        print(self.AddExpr.__name__)
+        self.MulExpr()
+        self.AddExpr1()
+
+    def AddExpr1(self):
+        print(self.AddExpr1.__name__)
+        self.lambdaWrapper('_AddExpr1')
+
+    def _AddExpr1(self):
+        self.AddOp()
+        self.MulExpr()
+        self.AddExpr1()
+
+    def AddOp(self):
+        self.computeMatch('AddOp')
+
+    def MulExpr(self):
+        print(self.MulExpr.__name__)
+        self.UnaryExpr()
+        self.MulExpr1()
+
+    def MulExpr1(self):
+        print(self.MulExpr1.__name__)
+        self.lambdaWrapper('_MulExpr1')
+    
+    def _MulExpr1(self):
+        self.MulOp()
+        self.UnaryExpr()
+        self.MulExpr1()
+
+    def UnaryExpr(self):
+        print(self.UnaryExpr.__name__)
+        self.lambdaWrapper('_UnaryExpr')
+
+    def _UnaryExpr(self):
+        self.computeMatch('UnaryOp')
+
+    def MulOp(self):
+        self.computeMatch('MulOp')
+
+    def UnaryOp(self):
+        self.computeMatch('UnaryOp')
+
+    def ExtraExpr(self):
+        print(self.ExtraExpr.__name__)
+        if self.tryComputeMatch('CmplExpr'):
+            self.CmplExpr()
+        else:
+            self.Expr()
+
+    def ExprList(self):
+        print(self.ExprList.__name__)
+        self.lambdaWrapper('_ExprList')
+
+    def _ExprList(self):
+        self.ExprListTail()
+
+    def ExprListTail(self):
+        print(self.ExprListTail.__name__)
+        self.lambdaWrapper('_ExprListTail')
+
+    def _ExprListTail(self):
+        self.Expr()
+        self.ExprListTail1()
+
+    def ExprListTail1(self):
+        print(self.ExprListTail1.__name__)
+        self.lambdaWrapper('_ExprListTail1')
+
+    def _ExprListTail1(self):
+        self.match({','})
+        self.ExprListTail()
+
+    def StmtList1(self):
+        print(self.StmtList1.__name__)
+        self.lambdaWrapper('_StmtList1')
+
+    def _StmtList1(self):
+        self.Stmt()
+        self.StmtList1() 
+
+    def FunctionDecl1(self):
+        print(self.FunctionDecl1.__name__)
+        self.lambdaWrapper('_FunctionDecl1')
+
+    def _FunctionDecl1(self):
+        self.Program()
+
+    def Array(self):
+        print(self.Array.__name__)
+        self.lambdaWrapper('_Array')
+
+    def _Array(self):
+        self.match({'['})
+        self.match({'NUM'})
+        self.match({']'})
+
+    def Array1(self):
+        print(self.Array1.__name__)
+        self.Array()
+        self.Array2()
+
+    def Array2(self):
+        print(self.Array2.__name__)
+        self.lambdaWrapper('_Array2')
+
+    def _Array2(self):
+        self.match({','})
+        self.match({'ID'})
+        self.Array1()
+
+    def FormalRest(self):
+        print(self.FormalRest.__name__)
+        self.lambdaWrapper('_FormalRest')
+
+    def _FormalRest(self):
+        self.match({','})
+        self.Type()
+        self.match({'ID'})
+        self.Array()
+        self.FormalRest()        
 
     def generateOutput(self):
         return self.buffer
@@ -215,10 +581,10 @@ class Sintatico(ISintatico):
         self.buffer = buffer
         
     def output(self) -> str:
-        generatedOutput = self.parse()
         print("\nFirts:")
         self.printDict(self.first)
         print("\nFollow:")
         self.printDict(self.follow)
+        generatedOutput = self.parse()
         #self.fs.uploadFile(os.path.join('tmp','sintatico'), 'saida.txt', 'w', generatedOutput)
         #return generatedOutput

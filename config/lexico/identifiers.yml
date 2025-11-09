@@ -3,7 +3,7 @@ number:
 id:
   output: <ID,{VALUE}>
 string:
-  output: <STR,{VALUE}>
+  output: <LITERAL,{VALUE}>
 bool: 
   output: <BOOL,{VALUE}>
 float:

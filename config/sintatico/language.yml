@@ -82,8 +82,6 @@ Type:
   -
     - bool
   -
-    - ID
-  -
     - char
 StmtList1:
   -
@@ -171,8 +169,6 @@ Primary:
   -
     - LITERAL
   -
-    - ASCII
-  -
     - true
   -
     - false
@@ -188,6 +184,12 @@ AltExpr:
     - "["
     - Expr
     - "]"
+    - AltExpr1
+  -
+    - CmplExpr
+  -
+    - LAMBDA
+AltExpr1:
   -
     - CmplExpr
   -
@@ -205,6 +207,8 @@ ExtraExpr:
   -
     - CmplExpr
 UnaryOp:
+  -
+    - --
   -
     - ++
   -
@@ -294,6 +298,5 @@ MulOp:
 UnaryExpr:
   -
     - UnaryOp
-    - UnaryExpr
   -
-    - Primary
+    - LAMBDA
