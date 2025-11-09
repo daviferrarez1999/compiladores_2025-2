@@ -117,6 +117,9 @@ class Sintatico(ISintatico):
                         if self.isTerminal(prod[-1],grammar) and prod[-1] != EPSILON:
                             if EPSILON in first[prod[-1]]:
                                 follow[s].update(follow[nt])
+
+            # Pra mim first incluída os terminais, tipo, first['('] = {'('}
+
             if follow != before:
                 before = follow
             else:
