@@ -96,38 +96,50 @@ class Sintatico(ISintatico):
                             break
         return first
 
-
     def computeFollow(self,grammar,first):
         EPSILON = "LAMBDA"
+        initial = 'Program'
         follow = {nt: set() for nt in grammar}
-        follow['Program'].add(EPSILON)
-        
-        before = follow
-        while True:
-            for nt, productions in grammar.items():
-                for prod in productions:
-                    if not self.isTerminal(prod[-1],grammar):
-                        for s in prod:
-                            if not self.isTerminal(s,grammar):
-                                follow[prod[-1]].update(follow[nt])
-                    else:
-                        for s in prod:
-                            if self.isTerminal(s,grammar) and s != EPSILON:
-                                follow[s].update(first[prod[-1]]-{EPSILON})
-                        if self.isTerminal(prod[-1],grammar) and prod[-1] != EPSILON:
-                            if EPSILON in first[prod[-1]]:
+        follow[initial] = {'$'}
+        aux = True
+        while aux:
+            aux = False
+            vis = set()
+            fila = [initial]
+            while len(fila):
+                nt = fila.pop(0)
+                for prod in grammar[nt]:
+                    for idx in range(len(prod)):
+                        s = prod[idx]
+                        if not self.isTerminal(s,grammar):
+                            if s not in vis:
+                                vis.add(s)
+                                fila.append(s)
+                            next = idx+1
+                            while -1 < next < len(prod):
+                                if self.isTerminal(prod[next],grammar) and prod[next] != EPSILON:
+                                    before = len(follow[s])
+                                    follow[s].add(prod[next])
+                                    if len(follow[s]) != before:
+                                        aux = True
+                                    next = -1
+                                else:
+                                    if prod[next] != EPSILON:
+                                        before = len(follow[s])
+                                        follow[s].update(first[prod[next]]-{EPSILON})
+                                        if len(follow[s]) != before:
+                                            aux = True
+                                    if prod[next] == EPSILON or EPSILON in first[prod[next]]:
+                                        next+=1
+                                    else:
+                                        next=-1
+                            if next >= len(prod):
+                                before = len(follow[s])
                                 follow[s].update(follow[nt])
+                                if len(follow[s]) != before:
+                                    aux = True
+        return follow 
 
-            # Pra mim first incluída os terminais, tipo, first['('] = {'('}
-
-            if follow != before:
-                before = follow
-            else:
-                break
-        print(follow)
-        input()
-        return follow   
-    
     def processInput(self):
         lexico = self.buffer
         tokenlist: list[str] = []
@@ -155,7 +167,7 @@ class Sintatico(ISintatico):
 
     def parse(self):
         self.word = self.processInput()
-        print(self.word)
+        #print(self.word)
         self.word.append('$')
 
         self.idx = 0
@@ -204,6 +216,9 @@ class Sintatico(ISintatico):
         
     def output(self) -> str:
         generatedOutput = self.parse()
+        print("\nFirts:")
         self.printDict(self.first)
+        print("\nFollow:")
+        self.printDict(self.follow)
         #self.fs.uploadFile(os.path.join('tmp','sintatico'), 'saida.txt', 'w', generatedOutput)
         #return generatedOutput
