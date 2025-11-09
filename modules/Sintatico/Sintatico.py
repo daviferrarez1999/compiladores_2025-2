@@ -1,4 +1,3 @@
-
 import os
 from injector import inject
 import yaml
@@ -46,8 +45,8 @@ class Sintatico(ISintatico):
         self.dict = self.loadTokens()
         self.dict.update({'$':'$'})
         self.first = self.computeFirst(self.language)
+        self.follow = self.computeFollow(self.language,self.first)
         self.word = ''
-        #self.follow = self.computeFollow(grammar,self.first)
 
         print("Configurações do sintático carregadas")
 
@@ -99,7 +98,32 @@ class Sintatico(ISintatico):
 
 
     def computeFollow(self,grammar,first):
-        pass
+        EPSILON = "LAMBDA"
+        follow = {nt: set() for nt in grammar}
+        follow['Program'].add(EPSILON)
+        
+        before = follow
+        while True:
+            for nt, productions in grammar.items():
+                for prod in productions:
+                    if not self.isTerminal(prod[-1],grammar):
+                        for s in prod:
+                            if not self.isTerminal(s,grammar):
+                                follow[prod[-1]].update(follow[nt])
+                    else:
+                        for s in prod:
+                            if self.isTerminal(s,grammar) and s != EPSILON:
+                                follow[s].update(first[prod[-1]]-{EPSILON})
+                        if self.isTerminal(prod[-1],grammar) and prod[-1] != EPSILON:
+                            if EPSILON in first[prod[-1]]:
+                                follow[s].update(follow[nt])
+            if follow != before:
+                before = follow
+            else:
+                break
+        print(follow)
+        input()
+        return follow   
     
     def processInput(self):
         lexico = self.buffer
