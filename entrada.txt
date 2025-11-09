@@ -1,11 +1,11 @@
-int main(void) {
-    char sourceString[50] = "Hello World";
+int main(int a) {
+    char sourceString[50];
     char destinationString[50];
-    char a = '\n';
-    float f = 0.6;
-    int index = 0;
+    char a;
+    float f;
+    int index;
 
-    while (sourceString[index] != '\0') {
+    while (sourceString[index] != a) {
         destinationString[index] = sourceString[index];
         index++;
     }
