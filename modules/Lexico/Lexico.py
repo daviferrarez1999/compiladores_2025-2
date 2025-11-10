@@ -90,6 +90,19 @@ class Lexico(ILexico):
         while(index < len(self.inputDataFile)):
             char = self.inputDataFile[index]
             self.computeLine(char)
+
+
+            if len(word) == 1 and self.isNumber(word) and self.mode == LexicoModes.READING:
+                word = ''
+                index -= 1
+                continue
+                
+            if len(word) == 0 and self.isNumber(char) and self.mode == LexicoModes.READING:
+                word += self.computeChar(char)
+                self.setNumberMode()
+                index += 1
+                continue
+            
             if len(word) == 0:
                 self.saveTokenIndex()
 
