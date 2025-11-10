@@ -1,19 +1,5 @@
-int main(int a) {
-    5 + 3/7 + 17 /2;
-    char sourceString[50];
-    char destinationString[50];
-    char a;
-    float f;
-    int index;
-
-    while (sourceString[index] != a) {
-        destinationString[index] = sourceString[index];
-        index++;
-    }
-    destinationString[index] = '\0';
-
-    print("Source String: %s\n", sourceString);
-    print("Copied String: %s\n", destinationString);
-
-    return 0;
+char teste() {
+    int x;
+    x = 100 && true + 6%9;
 }
+

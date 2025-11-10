@@ -2,6 +2,8 @@ if:
   output: <IF>
 while:
   output: <WHILE>
+print:
+  output: <PRINT>
 readln:
   output: <READLN>
 break:

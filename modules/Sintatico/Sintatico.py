@@ -18,6 +18,7 @@ class Sintatico(ISintatico):
     buffer: str
     fs: IFileSystem
     dict: Token
+    languageStack: List[str]
 
     @inject
     def __init__(self, fs: IFileSystem):
@@ -37,6 +38,7 @@ class Sintatico(ISintatico):
         """
         Carrega as configurações
         """
+        self.languageStack = []
         self.language = self.loadLanguage()
 
         for k,v in self.language.items():
@@ -50,8 +52,9 @@ class Sintatico(ISintatico):
             self.dict.update({value: key})
         self.dict.update({'$':'$'})
         self.first = self.computeFirst(self.language)
-        print(self.first)
+        self.printDict(self.first)
         self.follow = self.computeFollow(self.language,self.first)
+        self.printDict(self.follow)
         self.word = ''
 
         print("Configurações do sintático carregadas")
@@ -168,7 +171,6 @@ class Sintatico(ISintatico):
 
     def parse(self):
         self.word = self.processInput()
-        #print(self.word)
         self.word.append('$')
 
         self.idx = 0
@@ -177,12 +179,9 @@ class Sintatico(ISintatico):
 
         self.Program()
 
+        if self.lookahead != '<EOF>':
+            raise SyntaxError("EOF não encontrado")
         return self.resp
-
-    def computeMatchTest(self, type: str):
-        print(type)
-        currentSet = self.first.get(type, set())
-        self.match(currentSet)
 
     def convert(self, symbol):
         if symbol in self.dict:
@@ -191,8 +190,8 @@ class Sintatico(ISintatico):
 
     def match(self, tokens: set):
         lookaheadToken = self.getLookAheadToken()
-        if lookaheadToken in list(tokens):
-            print(f"Match: {self.lookahead}")
+        if lookaheadToken in list(tokens):            
+            self.languageStack.append(f"Match: {self.lookahead}")
             self.idx+=1 # avança o índice de leitura
             self.lookahead = self.convert(self.word[self.idx])
         else:
@@ -214,7 +213,7 @@ class Sintatico(ISintatico):
             return self.lookahead          
     
     def computeMatch(self, type: str):
-        print(type)
+        self.languageStack.append(type)
         currentSet = self.first.get(type, set())
         self.match(currentSet)
 
@@ -224,7 +223,7 @@ class Sintatico(ISintatico):
         return lookaheadToken in list(currentSet)
 
     def Program(self):
-        print(self.Program.__name__)
+        self.languageStack.append(self.Program.__name__)
         self.Type()
         self.Program1()
 
@@ -236,7 +235,7 @@ class Sintatico(ISintatico):
         self.Program2()
 
     def Program2(self):
-        print(self.Program2.__name__)
+        self.languageStack.append(self.Program2.__name__)
         if self.lookahead == '(':
             self.FunctionDecl()
         else:
@@ -244,7 +243,7 @@ class Sintatico(ISintatico):
             self.Program()
         
     def IdList(self):
-        print(self.IdList.__name__)
+        self.languageStack.append(self.IdList.__name__)
         self.match({'ID'})
         self.Array1()
 
@@ -259,7 +258,7 @@ class Sintatico(ISintatico):
         self.FunctionDecl1()
        
     def FormalList(self):
-        print(self.FormalList.__name__)
+        self.languageStack.append(self.FormalList.__name__)
         self.lambdaWrapper('_FormalList')
     
     def _FormalList(self):
@@ -274,12 +273,12 @@ class Sintatico(ISintatico):
             func = getattr(self, functionName)
             func()
         except:
-            print("LAMBDA")
             self.idx = currentIndex
             self.lookahead = self.convert(self.word[self.idx])
+            self.languageStack.pop()
 
     def VarDecl(self):
-        print(self.VarDecl.__name__)
+        self.languageStack.append(self.VarDecl.__name__)
         self.lambdaWrapper('_VarDecl')
 
     def _VarDecl(self):
@@ -290,12 +289,12 @@ class Sintatico(ISintatico):
 
 
     def StmtList(self):
-        print(self.StmtList.__name__)
+        self.languageStack.append(self.StmtList.__name__)
         self.Stmt()
         self.StmtList1()
 
     def Stmt(self):
-        print(self.Stmt.__name__)
+        self.languageStack.append(self.Stmt.__name__)
         match self.lookahead:
             case 'if':
                 self.match({'if'})
@@ -339,7 +338,7 @@ class Sintatico(ISintatico):
                 self.match({';'})
 
     def Expr(self):
-        print(self.Expr.__name__)
+        self.languageStack.append(self.Expr.__name__)
         if self.tryComputeMatch('Primary'):
             self.Primary()
             self.AltExpr()
@@ -348,7 +347,7 @@ class Sintatico(ISintatico):
             self.ExtraExpr()
 
     def Primary(self):
-        print(self.Primary.__name__)
+        self.languageStack.append(self.Primary.__name__)
         match self.getLookAheadToken():
             case '(':
                 self.match({'('})
@@ -369,7 +368,7 @@ class Sintatico(ISintatico):
                 raise SyntaxError(f"ERRO: unexpected token {self.lookahead}")
 
     def Ident(self):
-        print(self.Ident.__name__)
+        self.languageStack.append(self.Ident.__name__)
         self.lambdaWrapper('_Ident')        
         
     def _Ident(self):
@@ -378,7 +377,7 @@ class Sintatico(ISintatico):
         self.match({')'})
 
     def AltExpr(self):
-        print(self.AltExpr.__name__)
+        self.languageStack.append(self.AltExpr.__name__)
         self.lambdaWrapper('_AltExpr')
 
     def _AltExpr(self):
@@ -391,14 +390,14 @@ class Sintatico(ISintatico):
             self.CmplExpr()     
 
     def AltExpr1(self):
-        print(self.AltExpr1.__name__)
+        self.languageStack.append(self.AltExpr1.__name__)
         self.lambdaWrapper('_AltExpr1')  
 
     def _AltExpr1(self):
         self.CmplExpr()
 
     def CmplExpr(self):
-        print(self.CmplExpr.__name__)
+        self.languageStack.append(self.CmplExpr.__name__)
         if self.lookahead == '=':
             self.match({'='})
             self.Expr()
@@ -407,7 +406,7 @@ class Sintatico(ISintatico):
             self.Expr()
 
     def OrExpr1(self):
-        print(self.OrExpr1.__name__)
+        self.languageStack.append(self.OrExpr1.__name__)
         self.lambdaWrapper('_OrExpr1')
 
     def _OrExpr1(self):
@@ -416,17 +415,17 @@ class Sintatico(ISintatico):
         self.OrExpr1()
 
     def OrExpr(self):
-        print(self.OrExpr.__name__)
+        self.languageStack.append(self.OrExpr.__name__)
         self.AndExpr()
         self.OrExpr1()
 
     def AndExpr(self):
-        print(self.AndExpr.__name__)
+        self.languageStack.append(self.AndExpr.__name__)
         self.CompExpr()
         self.AndExpr1()
 
     def AndExpr1(self):
-        print(self.AndExpr1.__name__)
+        self.languageStack.append(self.AndExpr1.__name__)
         self.lambdaWrapper('_AndExpr1')
     
     def _AndExpr1(self):
@@ -435,12 +434,12 @@ class Sintatico(ISintatico):
         self.AndExpr1()
 
     def CompExpr(self):
-        print(self.CompExpr.__name__)
+        self.languageStack.append(self.CompExpr.__name__)
         self.AddExpr()
         self.CompExpr1()
 
     def CompExpr1(self):
-        print(self.CompExpr1.__name__)
+        self.languageStack.append(self.CompExpr1.__name__)
         self.lambdaWrapper('_CompExpr1')
 
     def _CompExpr1(self):
@@ -452,12 +451,12 @@ class Sintatico(ISintatico):
         self.computeMatch('CompOp')
 
     def AddExpr(self):
-        print(self.AddExpr.__name__)
+        self.languageStack.append(self.AddExpr.__name__)
         self.MulExpr()
         self.AddExpr1()
 
     def AddExpr1(self):
-        print(self.AddExpr1.__name__)
+        self.languageStack.append(self.AddExpr1.__name__)
         self.lambdaWrapper('_AddExpr1')
 
     def _AddExpr1(self):
@@ -469,12 +468,12 @@ class Sintatico(ISintatico):
         self.computeMatch('AddOp')
 
     def MulExpr(self):
-        print(self.MulExpr.__name__)
+        self.languageStack.append(self.MulExpr.__name__)
         self.UnaryExpr()
         self.MulExpr1()
 
     def MulExpr1(self):
-        print(self.MulExpr1.__name__)
+        self.languageStack.append(self.MulExpr1.__name__)
         self.lambdaWrapper('_MulExpr1')
     
     def _MulExpr1(self):
@@ -483,7 +482,7 @@ class Sintatico(ISintatico):
         self.MulExpr1()
 
     def UnaryExpr(self):
-        print(self.UnaryExpr.__name__)
+        self.languageStack.append(self.UnaryExpr.__name__)
         self.lambdaWrapper('_UnaryExpr')
 
     def _UnaryExpr(self):
@@ -496,29 +495,26 @@ class Sintatico(ISintatico):
         self.computeMatch('UnaryOp')
 
     def ExtraExpr(self):
-        print(self.ExtraExpr.__name__)
+        self.languageStack.append(self.ExtraExpr.__name__)
         if self.tryComputeMatch('CmplExpr'):
             self.CmplExpr()
         else:
             self.Expr()
 
     def ExprList(self):
-        print(self.ExprList.__name__)
+        self.languageStack.append(self.ExprList.__name__)
         self.lambdaWrapper('_ExprList')
 
     def _ExprList(self):
         self.ExprListTail()
 
     def ExprListTail(self):
-        print(self.ExprListTail.__name__)
-        self.lambdaWrapper('_ExprListTail')
-
-    def _ExprListTail(self):
+        self.languageStack.append(self.ExprListTail.__name__)
         self.Expr()
         self.ExprListTail1()
 
     def ExprListTail1(self):
-        print(self.ExprListTail1.__name__)
+        self.languageStack.append(self.ExprListTail1.__name__)
         self.lambdaWrapper('_ExprListTail1')
 
     def _ExprListTail1(self):
@@ -526,7 +522,7 @@ class Sintatico(ISintatico):
         self.ExprListTail()
 
     def StmtList1(self):
-        print(self.StmtList1.__name__)
+        self.languageStack.append(self.StmtList1.__name__)
         self.lambdaWrapper('_StmtList1')
 
     def _StmtList1(self):
@@ -534,14 +530,14 @@ class Sintatico(ISintatico):
         self.StmtList1() 
 
     def FunctionDecl1(self):
-        print(self.FunctionDecl1.__name__)
+        self.languageStack.append(self.FunctionDecl1.__name__)
         self.lambdaWrapper('_FunctionDecl1')
 
     def _FunctionDecl1(self):
         self.Program()
 
     def Array(self):
-        print(self.Array.__name__)
+        self.languageStack.append(self.Array.__name__)
         self.lambdaWrapper('_Array')
 
     def _Array(self):
@@ -550,12 +546,12 @@ class Sintatico(ISintatico):
         self.match({']'})
 
     def Array1(self):
-        print(self.Array1.__name__)
+        self.languageStack.append(self.Array1.__name__)
         self.Array()
         self.Array2()
 
     def Array2(self):
-        print(self.Array2.__name__)
+        self.languageStack.append(self.Array2.__name__)
         self.lambdaWrapper('_Array2')
 
     def _Array2(self):
@@ -564,7 +560,7 @@ class Sintatico(ISintatico):
         self.Array1()
 
     def FormalRest(self):
-        print(self.FormalRest.__name__)
+        self.languageStack.append(self.FormalRest.__name__)
         self.lambdaWrapper('_FormalRest')
 
     def _FormalRest(self):
@@ -581,10 +577,16 @@ class Sintatico(ISintatico):
         self.buffer = buffer
         
     def output(self) -> str:
-        print("\nFirts:")
-        self.printDict(self.first)
-        print("\nFollow:")
-        self.printDict(self.follow)
-        generatedOutput = self.parse()
+        errorMessage = ""
+        try:
+            generatedOutput = self.parse()  
+            print('N TEM ERRRO NAO')
+        except SyntaxError:
+            errorMessage = SyntaxError.msg
+        finally:
+            for token in self.languageStack:
+                print(token)
+        if errorMessage:
+            print(f"Error: {errorMessage}")
         #self.fs.uploadFile(os.path.join('tmp','sintatico'), 'saida.txt', 'w', generatedOutput)
         #return generatedOutput
