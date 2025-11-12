@@ -11,8 +11,6 @@ LANGUAGE = 'language.yml'
 TOKENS_FILE = 'private_tokens.yml'
 EPSILON = "LAMBDA"
 
-from .asa import node
-
 class Sintatico(ISintatico):
     language: Dict[str, List[List [str]]]
     index: int
@@ -44,7 +42,6 @@ class Sintatico(ISintatico):
         self.errorMessage = ""
         self.languageStack = []
         self.language = self.loadLanguage()
-        self.asa = node("Program")
 
         for k,v in self.language.items():
             print(f"{k}: {v}")
@@ -185,7 +182,7 @@ class Sintatico(ISintatico):
         self.Program()
 
         if self.lookahead != '<EOF>':
-            self.errorMessage = "EOF não encontrado"
+            elf.errorMessage = "EOF não encontrado"
             raise SyntaxError("EOF não encontrado")
         return self.resp
 
@@ -229,18 +226,14 @@ class Sintatico(ISintatico):
         lookaheadToken = self.getLookAheadToken()
         return lookaheadToken in list(currentSet)
 
-    def Program(self, asa: node | None = None):
-        if asa == None:
-            asa = node('Program')
+    def Program(self):
         self.languageStack.append(self.Program.__name__)
-        asa.add_children('Type',self.Type(asa))
-        self.Program1(asa)
+        self.Type()
+        self.Program1()
 
-    def Type(self, asa: node | None = None):
-        if asa is not None:
-            asa.add_children('Type',self.lookahead)
+    def Type(self):
         self.computeMatch('Type')
-        
+
     def Program1(self):
         self.computeMatch('Program1')
         self.Program2()
@@ -589,9 +582,8 @@ class Sintatico(ISintatico):
         self.buffer = buffer
         
     def output(self) -> str:
-        hasError = False 
+        hasError = False
         try:
-            print('avocado')
             generatedOutput = self.parse()     
         except:
             hasError = True       
