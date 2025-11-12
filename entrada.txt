@@ -1,5 +1,5 @@
 char teste() {
     int x;
-    x = 100 && true + 6%9;
+    x = true || false;
 }
 

@@ -169,9 +169,9 @@ Primary:
   -
     - LITERAL
   -
-    - true
+    - "true"
   -
-    - false
+    - "false"
 CmplExpr:
   -
     - "="

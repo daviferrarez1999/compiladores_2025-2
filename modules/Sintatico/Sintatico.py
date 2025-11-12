@@ -11,6 +11,8 @@ LANGUAGE = 'language.yml'
 TOKENS_FILE = 'private_tokens.yml'
 EPSILON = "LAMBDA"
 
+from .asa import node
+
 class Sintatico(ISintatico):
     language: Dict[str, List[List [str]]]
     index: int
@@ -19,6 +21,7 @@ class Sintatico(ISintatico):
     fs: IFileSystem
     dict: Token
     languageStack: List[str]
+    errorMessage: str
 
     @inject
     def __init__(self, fs: IFileSystem):
@@ -38,8 +41,10 @@ class Sintatico(ISintatico):
         """
         Carrega as configurações
         """
+        self.errorMessage = ""
         self.languageStack = []
         self.language = self.loadLanguage()
+        self.asa = node("Program")
 
         for k,v in self.language.items():
             print(f"{k}: {v}")
@@ -180,6 +185,7 @@ class Sintatico(ISintatico):
         self.Program()
 
         if self.lookahead != '<EOF>':
+            self.errorMessage = "EOF não encontrado"
             raise SyntaxError("EOF não encontrado")
         return self.resp
 
@@ -195,6 +201,7 @@ class Sintatico(ISintatico):
             self.idx+=1 # avança o índice de leitura
             self.lookahead = self.convert(self.word[self.idx])
         else:
+            self.errorMessage = f"ERRO: tokens esperados: {','.join(list(tokens))}. Foi encontrado {lookaheadToken}"
             raise SyntaxError(f"ERRO: tokens esperados: {','.join(list(tokens))}. Foi encontrado {lookaheadToken}")
 
     def getLookAheadToken(self):
@@ -222,14 +229,18 @@ class Sintatico(ISintatico):
         lookaheadToken = self.getLookAheadToken()
         return lookaheadToken in list(currentSet)
 
-    def Program(self):
+    def Program(self, asa: node | None = None):
+        if asa == None:
+            asa = node('Program')
         self.languageStack.append(self.Program.__name__)
-        self.Type()
-        self.Program1()
+        asa.add_children('Type',self.Type(asa))
+        self.Program1(asa)
 
-    def Type(self):
+    def Type(self, asa: node | None = None):
+        if asa is not None:
+            asa.add_children('Type',self.lookahead)
         self.computeMatch('Type')
-
+        
     def Program1(self):
         self.computeMatch('Program1')
         self.Program2()
@@ -365,7 +376,8 @@ class Sintatico(ISintatico):
             case 'false':
                 self.match({'false'})
             case _:
-                raise SyntaxError(f"ERRO: unexpected token {self.lookahead}")
+                self.errorMessage = f"ERRO: unexpected token {self.lookahead}"
+                raise SyntaxError(self.errorMessage)
 
     def Ident(self):
         self.languageStack.append(self.Ident.__name__)
@@ -429,7 +441,7 @@ class Sintatico(ISintatico):
         self.lambdaWrapper('_AndExpr1')
     
     def _AndExpr1(self):
-        self.match('&&')
+        self.match({'&&'})
         self.CompExpr()
         self.AndExpr1()
 
@@ -577,16 +589,18 @@ class Sintatico(ISintatico):
         self.buffer = buffer
         
     def output(self) -> str:
-        errorMessage = ""
+        hasError = False 
         try:
-            generatedOutput = self.parse()  
-            print('N TEM ERRRO NAO')
-        except SyntaxError:
-            errorMessage = SyntaxError.msg
+            print('avocado')
+            generatedOutput = self.parse()     
+        except:
+            hasError = True       
         finally:
             for token in self.languageStack:
-                print(token)
-        if errorMessage:
-            print(f"Error: {errorMessage}")
+                if token.startswith('Match:'):
+                    print(token)
+            
+        if hasError:
+            print(f"{self.errorMessage}")            
         #self.fs.uploadFile(os.path.join('tmp','sintatico'), 'saida.txt', 'w', generatedOutput)
         #return generatedOutput
