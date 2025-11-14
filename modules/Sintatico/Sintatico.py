@@ -5,11 +5,36 @@ import yaml
 from modules.FileSystem import IFileSystem
 from .ISintatico import ISintatico
 from .types import LexicoModes, Token, Identifier
-from typing import List, cast, Dict
+from typing import List, cast, Dict, Optional
 
 LANGUAGE = 'language.yml'
 TOKENS_FILE = 'private_tokens.yml'
 EPSILON = "LAMBDA"
+
+# === ASA simplificada ===
+class Node:
+    """
+    Nó da ASA simplificada.
+    name: nome do nó (geralmente o nome da produção)
+    children: lista de nós filhos
+    value: valor (usado para folhas: ID, NUM, LITERAL, true, false)
+    """
+    def __init__(self, name: str, children: Optional[List['Node']] = None, value: Optional[str] = None):
+        self.name = name
+        self.children: List[Node] = children or []
+        self.value = value
+
+    def add(self, node: Optional['Node']):
+        if node is not None:
+            self.children.append(node)
+
+    def __repr__(self):
+        if self.value is not None:
+            return f"Node({self.name!r}, value={self.value!r})"
+        if self.children:
+            return f"Node({self.name!r}, children={len(self.children)})"
+        return f"Node({self.name!r})"
+
 
 class Sintatico(ISintatico):
     language: Dict[str, List[List [str]]]
@@ -177,26 +202,39 @@ class Sintatico(ISintatico):
 
         self.idx = 0
         self.lookahead = self.convert(self.word[0])
-        self.resp = False
-
-        self.Program()
+        # self.resp = False
+        # chama Program e retorna raiz da ASA
+        self.ast = self.Program()
 
         if self.lookahead != '<EOF>':
-            elf.errorMessage = "EOF não encontrado"
+            self.errorMessage = "EOF não encontrado"
             raise SyntaxError("EOF não encontrado")
-        return self.resp
+        return self.ast
 
     def convert(self, symbol):
         if symbol in self.dict:
             return self.dict.get(symbol)
         return symbol
 
-    def match(self, tokens: set):
+    def match(self, tokens: set) -> Optional[Node]:
+        """
+        Faz o match do próximo token com o conjunto tokens.
+        Retorna Node apenas para tokens semânticos (ID, NUM, LITERAL, true, false)
+        Caso contrário retorna None (não gerar nós para símbolos literais).
+        """
         lookaheadToken = self.getLookAheadToken()
-        if lookaheadToken in list(tokens):            
+        if lookaheadToken in list(tokens):
+            # captura valor completo antes de avançar
+            value = self.lookahead
             self.languageStack.append(f"Match: {self.lookahead}")
-            self.idx+=1 # avança o índice de leitura
+            self.idx += 1  # avança o índice de leitura
             self.lookahead = self.convert(self.word[self.idx])
+
+            # Tokens que consideramos folhas semânticas na ASA simplificada
+            if lookaheadToken in {'ID', 'NUM', 'LITERAL', 'true', 'false'}:
+                return Node(lookaheadToken, value=value)
+            else:
+                return None
         else:
             self.errorMessage = f"ERRO: tokens esperados: {','.join(list(tokens))}. Foi encontrado {lookaheadToken}"
             raise SyntaxError(f"ERRO: tokens esperados: {','.join(list(tokens))}. Foi encontrado {lookaheadToken}")
@@ -216,364 +254,533 @@ class Sintatico(ISintatico):
         else:
             return self.lookahead          
     
-    def computeMatch(self, type: str):
+    def computeMatch(self, type: str) -> Optional[Node]:
+        """
+        Faz o computeMatch (usado para tokens compostos no arquivo de linguagem)
+        Retorna o Node retornado por match (ou None)
+        """
         self.languageStack.append(type)
         currentSet = self.first.get(type, set())
-        self.match(currentSet)
+        return self.match(currentSet)
 
     def tryComputeMatch(self, type: str):
         currentSet = self.first.get(type, set())
         lookaheadToken = self.getLookAheadToken()
         return lookaheadToken in list(currentSet)
 
-    def Program(self):
+    # --- Grammar functions: agora retornam Node (ou None para lambdas) ---
+    def Program(self) -> Optional[Node]:
+        node = Node("Program")
         self.languageStack.append(self.Program.__name__)
-        self.Type()
-        self.Program1()
+        child = self.Type()
+        node.add(child)
+        child = self.Program1()
+        node.add(child)
+        return node
 
-    def Type(self):
-        self.computeMatch('Type')
+    def Type(self) -> Optional[Node]:
+        node = Node("Type")
+        child = self.computeMatch('Type')
+        node.add(child)
+        return node
 
-    def Program1(self):
-        self.computeMatch('Program1')
-        self.Program2()
+    def Program1(self) -> Optional[Node]:
+        node = Node("Program1")
+        child = self.computeMatch('Program1')
+        node.add(child)
+        child = self.Program2()
+        node.add(child)
+        return node
 
-    def Program2(self):
+    def Program2(self) -> Optional[Node]:
+        node = Node("Program2")
         self.languageStack.append(self.Program2.__name__)
         if self.lookahead == '(':
-            self.FunctionDecl()
+            child = self.FunctionDecl()
+            node.add(child)
         else:
-            self.IdList()
-            self.Program()
+            child = self.IdList()
+            node.add(child)
+            child = self.Program()
+            node.add(child)
+        return node
         
-    def IdList(self):
+    def IdList(self) -> Optional[Node]:
+        node = Node("IdList")
         self.languageStack.append(self.IdList.__name__)
-        self.match({'ID'})
-        self.Array1()
+        child = self.match({'ID'})
+        node.add(child)
+        child = self.Array1()
+        node.add(child)
+        return node
 
-    def FunctionDecl(self):
-        self.computeMatch('FunctionDecl')
-        self.FormalList()
-        self.match({')'})
-        self.match({'{'})
-        self.VarDecl()
-        self.StmtList()
-        self.match({'}'})
-        self.FunctionDecl1()
+    def FunctionDecl(self) -> Optional[Node]:
+        node = Node("FunctionDecl")
+        child = self.computeMatch('FunctionDecl')
+        node.add(child)
+        child = self.FormalList()
+        node.add(child)
+        child = self.match({')'})
+        node.add(child)
+        child = self.match({'{'})
+        node.add(child)
+        child = self.VarDecl()
+        node.add(child)
+        child = self.StmtList()
+        node.add(child)
+        child = self.match({'}'})
+        node.add(child)
+        child = self.FunctionDecl1()
+        node.add(child)
+        return node
        
-    def FormalList(self):
+    def FormalList(self) -> Optional[Node]:
+        node = Node("FormalList")
         self.languageStack.append(self.FormalList.__name__)
-        self.lambdaWrapper('_FormalList')
+        child = self.lambdaWrapper('_FormalList')
+        node.add(child)
+        return node
     
-    def _FormalList(self):
-        self.Type()
-        self.match({'ID'})
-        self.Array()
-        self.FormalRest()
+    def _FormalList(self) -> Optional[Node]:
+        node = Node("_FormalList")
+        child = self.Type()
+        node.add(child)
+        child = self.match({'ID'})
+        node.add(child)
+        child = self.Array()
+        node.add(child)
+        child = self.FormalRest()
+        node.add(child)
+        return node
 
-    def lambdaWrapper(self, functionName):
+    def lambdaWrapper(self, functionName) -> Optional[Node]:
+        """
+        Executa produções opcionais. Se a produção falhar, restaura índice e retorna None.
+        """
         currentIndex = self.idx
         try:
             func = getattr(self, functionName)
-            func()
-        except:
+            return func()
+        except Exception:
+            # restaura estado se falhar
             self.idx = currentIndex
             self.lookahead = self.convert(self.word[self.idx])
-            self.languageStack.pop()
+            # remove o último registro do languageStack se presente
+            if self.languageStack:
+                try:
+                    self.languageStack.pop()
+                except Exception:
+                    pass
+            return None
 
-    def VarDecl(self):
+    def VarDecl(self) -> Optional[Node]:
+        node = Node("VarDecl")
         self.languageStack.append(self.VarDecl.__name__)
-        self.lambdaWrapper('_VarDecl')
+        child = self.lambdaWrapper('_VarDecl')
+        node.add(child)
+        return node
 
-    def _VarDecl(self):
-        self.Type()
-        self.IdList()
-        self.match({';'})
-        self.VarDecl()
+    def _VarDecl(self) -> Optional[Node]:
+        node = Node("_VarDecl")
+        child = self.Type()
+        node.add(child)
+        child = self.IdList()
+        node.add(child)
+        child = self.match({';'})
+        node.add(child)
+        child = self.VarDecl()
+        node.add(child)
+        return node
 
 
-    def StmtList(self):
+    def StmtList(self) -> Optional[Node]:
+        node = Node("StmtList")
         self.languageStack.append(self.StmtList.__name__)
-        self.Stmt()
-        self.StmtList1()
+        child = self.Stmt()
+        node.add(child)
+        child = self.StmtList1()
+        node.add(child)
+        return node
 
-    def Stmt(self):
+    def Stmt(self) -> Optional[Node]:
+        node = Node("Stmt")
         self.languageStack.append(self.Stmt.__name__)
-        match self.lookahead:
+        la = self.lookahead
+        # dispatch similar to match/case
+        match la:
             case 'if':
-                self.match({'if'})
-                self.match({'('})
-                self.Expr()
-                self.match({')'})
-                self.Stmt()
-                self.match({'else'})
-                self.Stmt()
+                node.add(self.match({'if'}))
+                node.add(self.match({'('}))
+                node.add(self.Expr())
+                node.add(self.match({')'}))
+                node.add(self.Stmt())
+                node.add(self.match({'else'}))
+                node.add(self.Stmt())
             case 'while':
-                self.match({'while'})
-                self.match({'('})
-                self.Expr()
-                self.match({')'})
-                self.Stmt()
+                node.add(self.match({'while'}))
+                node.add(self.match({'('}))
+                node.add(self.Expr())
+                node.add(self.match({')'}))
+                node.add(self.Stmt())
             case 'break':
-                self.match({'break'})
-                self.match({';'})
+                node.add(self.match({'break'}))
+                node.add(self.match({';'}))
             case 'print':
-                self.match({'print'})
-                self.match({'('})
-                self.ExprList()
-                self.match({')'})
-                self.match({';'})
+                node.add(self.match({'print'}))
+                node.add(self.match({'('}))
+                node.add(self.ExprList())
+                node.add(self.match({')'}))
+                node.add(self.match({';'}))
             case 'readln':
-                self.match({'readln'})
-                self.match({'('})
-                self.Expr()
-                self.match({')'})
-                self.match({';'})
+                node.add(self.match({'readln'}))
+                node.add(self.match({'('}))
+                node.add(self.Expr())
+                node.add(self.match({')'}))
+                node.add(self.match({';'}))
             case 'return':
-                self.match({'return'})
-                self.Expr()
-                self.match({';'})
+                node.add(self.match({'return'}))
+                node.add(self.Expr())
+                node.add(self.match({';'}))
             case '{':
-                self.match({'{'})
-                self.StmtList()
-                self.match({'}'})
+                node.add(self.match({'{'}))
+                node.add(self.StmtList())
+                node.add(self.match({'}'}))
             case _:
-                self.Expr()
-                self.match({';'})
+                node.add(self.Expr())
+                node.add(self.match({';'}))
+        return node
 
-    def Expr(self):
+    def Expr(self) -> Optional[Node]:
+        node = Node("Expr")
         self.languageStack.append(self.Expr.__name__)
         if self.tryComputeMatch('Primary'):
-            self.Primary()
-            self.AltExpr()
+            node.add(self.Primary())
+            node.add(self.AltExpr())
         else:
-            self.UnaryOp()
-            self.ExtraExpr()
+            node.add(self.UnaryOp())
+            node.add(self.ExtraExpr())
+        return node
 
-    def Primary(self):
+    def Primary(self) -> Optional[Node]:
+        node = Node("Primary")
         self.languageStack.append(self.Primary.__name__)
-        match self.getLookAheadToken():
+        la = self.getLookAheadToken()
+        match la:
             case '(':
-                self.match({'('})
-                self.Expr()
-                self.match({')'})
+                node.add(self.match({'('}))
+                node.add(self.Expr())
+                node.add(self.match({')'}))
             case 'ID':
-                self.match({'ID'})
-                self.Ident()
+                node.add(self.match({'ID'}))
+                node.add(self.Ident())
             case 'NUM':
-                self.match({'NUM'})
+                node.add(self.match({'NUM'}))
             case 'LITERAL':
-                self.match({'LITERAL'})
+                node.add(self.match({'LITERAL'}))
             case 'true':
-                self.match({'true'})
+                node.add(self.match({'true'}))
             case 'false':
-                self.match({'false'})
+                node.add(self.match({'false'}))
             case _:
                 self.errorMessage = f"ERRO: unexpected token {self.lookahead}"
                 raise SyntaxError(self.errorMessage)
+        return node
 
-    def Ident(self):
+    def Ident(self) -> Optional[Node]:
+        node = Node("Ident")
         self.languageStack.append(self.Ident.__name__)
-        self.lambdaWrapper('_Ident')        
+        child = self.lambdaWrapper('_Ident')
+        node.add(child)
+        return node        
         
-    def _Ident(self):
-        self.match({'('})
-        self.ExprList()
-        self.match({')'})
+    def _Ident(self) -> Optional[Node]:
+        node = Node("_Ident")
+        node.add(self.match({'('}))
+        node.add(self.ExprList())
+        node.add(self.match({')'}))
+        return node
 
-    def AltExpr(self):
+    def AltExpr(self) -> Optional[Node]:
+        node = Node("AltExpr")
         self.languageStack.append(self.AltExpr.__name__)
-        self.lambdaWrapper('_AltExpr')
+        node.add(self.lambdaWrapper('_AltExpr'))
+        return node
 
-    def _AltExpr(self):
+    def _AltExpr(self) -> Optional[Node]:
+        node = Node("_AltExpr")
         if self.lookahead == '[':
-            self.match({'['})
-            self.Expr()
-            self.match({']'})
-            self.AltExpr1()
+            node.add(self.match({'['}))
+            node.add(self.Expr())
+            node.add(self.match({']'}))
+            node.add(self.AltExpr1())
         else:
-            self.CmplExpr()     
+            node.add(self.CmplExpr())
+        return node     
 
-    def AltExpr1(self):
+    def AltExpr1(self) -> Optional[Node]:
+        node = Node("AltExpr1")
         self.languageStack.append(self.AltExpr1.__name__)
-        self.lambdaWrapper('_AltExpr1')  
+        node.add(self.lambdaWrapper('_AltExpr1'))
+        return node  
 
-    def _AltExpr1(self):
-        self.CmplExpr()
+    def _AltExpr1(self) -> Optional[Node]:
+        node = Node("_AltExpr1")
+        node.add(self.CmplExpr())
+        return node
 
-    def CmplExpr(self):
+    def CmplExpr(self) -> Optional[Node]:
+        node = Node("CmplExpr")
         self.languageStack.append(self.CmplExpr.__name__)
         if self.lookahead == '=':
-            self.match({'='})
-            self.Expr()
+            node.add(self.match({'='}))
+            node.add(self.Expr())
         else:
-            self.OrExpr()
-            self.Expr()
+            node.add(self.OrExpr())
+            node.add(self.Expr())
+        return node
 
-    def OrExpr1(self):
+    def OrExpr1(self) -> Optional[Node]:
+        node = Node("OrExpr1")
         self.languageStack.append(self.OrExpr1.__name__)
-        self.lambdaWrapper('_OrExpr1')
+        node.add(self.lambdaWrapper('_OrExpr1'))
+        return node
 
-    def _OrExpr1(self):
-        self.match({'||'})
-        self.AndExpr()
-        self.OrExpr1()
+    def _OrExpr1(self) -> Optional[Node]:
+        node = Node("_OrExpr1")
+        node.add(self.match({'||'}))
+        node.add(self.AndExpr())
+        node.add(self.OrExpr1())
+        return node
 
-    def OrExpr(self):
+    def OrExpr(self) -> Optional[Node]:
+        node = Node("OrExpr")
         self.languageStack.append(self.OrExpr.__name__)
-        self.AndExpr()
-        self.OrExpr1()
+        node.add(self.AndExpr())
+        node.add(self.OrExpr1())
+        return node
 
-    def AndExpr(self):
+    def AndExpr(self) -> Optional[Node]:
+        node = Node("AndExpr")
         self.languageStack.append(self.AndExpr.__name__)
-        self.CompExpr()
-        self.AndExpr1()
+        node.add(self.CompExpr())
+        node.add(self.AndExpr1())
+        return node
 
-    def AndExpr1(self):
+    def AndExpr1(self) -> Optional[Node]:
+        node = Node("AndExpr1")
         self.languageStack.append(self.AndExpr1.__name__)
-        self.lambdaWrapper('_AndExpr1')
+        node.add(self.lambdaWrapper('_AndExpr1'))
+        return node
     
-    def _AndExpr1(self):
-        self.match({'&&'})
-        self.CompExpr()
-        self.AndExpr1()
+    def _AndExpr1(self) -> Optional[Node]:
+        node = Node("_AndExpr1")
+        node.add(self.match({'&&'}))
+        node.add(self.CompExpr())
+        node.add(self.AndExpr1())
+        return node
 
-    def CompExpr(self):
+    def CompExpr(self) -> Optional[Node]:
+        node = Node("CompExpr")
         self.languageStack.append(self.CompExpr.__name__)
-        self.AddExpr()
-        self.CompExpr1()
+        node.add(self.AddExpr())
+        node.add(self.CompExpr1())
+        return node
 
-    def CompExpr1(self):
+    def CompExpr1(self) -> Optional[Node]:
+        node = Node("CompExpr1")
         self.languageStack.append(self.CompExpr1.__name__)
-        self.lambdaWrapper('_CompExpr1')
+        node.add(self.lambdaWrapper('_CompExpr1'))
+        return node
 
-    def _CompExpr1(self):
-        self.CompOp()
-        self.AddExpr()
-        self.CompExpr1()
+    def _CompExpr1(self) -> Optional[Node]:
+        node = Node("_CompExpr1")
+        node.add(self.CompOp())
+        node.add(self.AddExpr())
+        node.add(self.CompExpr1())
+        return node
 
-    def CompOp(self):
-        self.computeMatch('CompOp')
+    def CompOp(self) -> Optional[Node]:
+        node = Node("CompOp")
+        child = self.computeMatch('CompOp')
+        node.add(child)
+        return node
 
-    def AddExpr(self):
+    def AddExpr(self) -> Optional[Node]:
+        node = Node("AddExpr")
         self.languageStack.append(self.AddExpr.__name__)
-        self.MulExpr()
-        self.AddExpr1()
+        node.add(self.MulExpr())
+        node.add(self.AddExpr1())
+        return node
 
-    def AddExpr1(self):
+    def AddExpr1(self) -> Optional[Node]:
+        node = Node("AddExpr1")
         self.languageStack.append(self.AddExpr1.__name__)
-        self.lambdaWrapper('_AddExpr1')
+        node.add(self.lambdaWrapper('_AddExpr1'))
+        return node
 
-    def _AddExpr1(self):
-        self.AddOp()
-        self.MulExpr()
-        self.AddExpr1()
+    def _AddExpr1(self) -> Optional[Node]:
+        node = Node("_AddExpr1")
+        node.add(self.AddOp())
+        node.add(self.MulExpr())
+        node.add(self.AddExpr1())
+        return node
 
-    def AddOp(self):
-        self.computeMatch('AddOp')
+    def AddOp(self) -> Optional[Node]:
+        node = Node("AddOp")
+        child = self.computeMatch('AddOp')
+        node.add(child)
+        return node
 
-    def MulExpr(self):
+    def MulExpr(self) -> Optional[Node]:
+        node = Node("MulExpr")
         self.languageStack.append(self.MulExpr.__name__)
-        self.UnaryExpr()
-        self.MulExpr1()
+        node.add(self.UnaryExpr())
+        node.add(self.MulExpr1())
+        return node
 
-    def MulExpr1(self):
+    def MulExpr1(self) -> Optional[Node]:
+        node = Node("MulExpr1")
         self.languageStack.append(self.MulExpr1.__name__)
-        self.lambdaWrapper('_MulExpr1')
+        node.add(self.lambdaWrapper('_MulExpr1'))
+        return node
     
-    def _MulExpr1(self):
-        self.MulOp()
-        self.UnaryExpr()
-        self.MulExpr1()
+    def _MulExpr1(self) -> Optional[Node]:
+        node = Node("_MulExpr1")
+        node.add(self.MulOp())
+        node.add(self.UnaryExpr())
+        node.add(self.MulExpr1())
+        return node
 
-    def UnaryExpr(self):
+    def UnaryExpr(self) -> Optional[Node]:
+        node = Node("UnaryExpr")
         self.languageStack.append(self.UnaryExpr.__name__)
-        self.lambdaWrapper('_UnaryExpr')
+        node.add(self.lambdaWrapper('_UnaryExpr'))
+        return node
 
-    def _UnaryExpr(self):
-        self.computeMatch('UnaryOp')
+    def _UnaryExpr(self) -> Optional[Node]:
+        node = Node("_UnaryExpr")
+        node.add(self.computeMatch('UnaryOp'))
+        return node
 
-    def MulOp(self):
-        self.computeMatch('MulOp')
+    def MulOp(self) -> Optional[Node]:
+        node = Node("MulOp")
+        node.add(self.computeMatch('MulOp'))
+        return node
 
-    def UnaryOp(self):
-        self.computeMatch('UnaryOp')
+    def UnaryOp(self) -> Optional[Node]:
+        node = Node("UnaryOp")
+        node.add(self.computeMatch('UnaryOp'))
+        return node
 
-    def ExtraExpr(self):
+    def ExtraExpr(self) -> Optional[Node]:
+        node = Node("ExtraExpr")
         self.languageStack.append(self.ExtraExpr.__name__)
         if self.tryComputeMatch('CmplExpr'):
-            self.CmplExpr()
+            node.add(self.CmplExpr())
         else:
-            self.Expr()
+            node.add(self.Expr())
+        return node
 
-    def ExprList(self):
+    def ExprList(self) -> Optional[Node]:
+        node = Node("ExprList")
         self.languageStack.append(self.ExprList.__name__)
-        self.lambdaWrapper('_ExprList')
+        node.add(self.lambdaWrapper('_ExprList'))
+        return node
 
-    def _ExprList(self):
-        self.ExprListTail()
+    def _ExprList(self) -> Optional[Node]:
+        node = Node("_ExprList")
+        node.add(self.ExprListTail())
+        return node
 
-    def ExprListTail(self):
+    def ExprListTail(self) -> Optional[Node]:
+        node = Node("ExprListTail")
         self.languageStack.append(self.ExprListTail.__name__)
-        self.Expr()
-        self.ExprListTail1()
+        node.add(self.Expr())
+        node.add(self.ExprListTail1())
+        return node
 
-    def ExprListTail1(self):
+    def ExprListTail1(self) -> Optional[Node]:
+        node = Node("ExprListTail1")
         self.languageStack.append(self.ExprListTail1.__name__)
-        self.lambdaWrapper('_ExprListTail1')
+        node.add(self.lambdaWrapper('_ExprListTail1'))
+        return node
 
-    def _ExprListTail1(self):
-        self.match({','})
-        self.ExprListTail()
+    def _ExprListTail1(self) -> Optional[Node]:
+        node = Node("_ExprListTail1")
+        node.add(self.match({','}))
+        node.add(self.ExprListTail())
+        return node
 
-    def StmtList1(self):
+    def StmtList1(self) -> Optional[Node]:
+        node = Node("StmtList1")
         self.languageStack.append(self.StmtList1.__name__)
-        self.lambdaWrapper('_StmtList1')
+        node.add(self.lambdaWrapper('_StmtList1'))
+        return node
 
-    def _StmtList1(self):
-        self.Stmt()
-        self.StmtList1() 
+    def _StmtList1(self) -> Optional[Node]:
+        node = Node("_StmtList1")
+        node.add(self.Stmt())
+        node.add(self.StmtList1())
+        return node
 
-    def FunctionDecl1(self):
+    def FunctionDecl1(self) -> Optional[Node]:
+        node = Node("FunctionDecl1")
         self.languageStack.append(self.FunctionDecl1.__name__)
-        self.lambdaWrapper('_FunctionDecl1')
+        node.add(self.lambdaWrapper('_FunctionDecl1'))
+        return node
 
-    def _FunctionDecl1(self):
-        self.Program()
+    def _FunctionDecl1(self) -> Optional[Node]:
+        node = Node("_FunctionDecl1")
+        node.add(self.Program())
+        return node
 
-    def Array(self):
+    def Array(self) -> Optional[Node]:
+        node = Node("Array")
         self.languageStack.append(self.Array.__name__)
-        self.lambdaWrapper('_Array')
+        node.add(self.lambdaWrapper('_Array'))
+        return node
 
-    def _Array(self):
-        self.match({'['})
-        self.match({'NUM'})
-        self.match({']'})
+    def _Array(self) -> Optional[Node]:
+        node = Node("_Array")
+        node.add(self.match({'['}))
+        node.add(self.match({'NUM'}))
+        node.add(self.match({']'}))
+        return node
 
-    def Array1(self):
+    def Array1(self) -> Optional[Node]:
+        node = Node("Array1")
         self.languageStack.append(self.Array1.__name__)
-        self.Array()
-        self.Array2()
+        node.add(self.Array())
+        node.add(self.Array2())
+        return node
 
-    def Array2(self):
+    def Array2(self) -> Optional[Node]:
+        node = Node("Array2")
         self.languageStack.append(self.Array2.__name__)
-        self.lambdaWrapper('_Array2')
+        node.add(self.lambdaWrapper('_Array2'))
+        return node
 
-    def _Array2(self):
-        self.match({','})
-        self.match({'ID'})
-        self.Array1()
+    def _Array2(self) -> Optional[Node]:
+        node = Node("_Array2")
+        node.add(self.match({','}))
+        node.add(self.match({'ID'}))
+        node.add(self.Array1())
+        return node
 
-    def FormalRest(self):
+    def FormalRest(self) -> Optional[Node]:
+        node = Node("FormalRest")
         self.languageStack.append(self.FormalRest.__name__)
-        self.lambdaWrapper('_FormalRest')
+        node.add(self.lambdaWrapper('_FormalRest'))
+        return node
 
-    def _FormalRest(self):
-        self.match({','})
-        self.Type()
-        self.match({'ID'})
-        self.Array()
-        self.FormalRest()        
+    def _FormalRest(self) -> Optional[Node]:
+        node = Node("_FormalRest")
+        node.add(self.match({','}))
+        node.add(self.Type())
+        node.add(self.match({'ID'}))
+        node.add(self.Array())
+        node.add(self.FormalRest())
+        return node        
 
     def generateOutput(self):
         return self.buffer
@@ -584,15 +791,28 @@ class Sintatico(ISintatico):
     def output(self) -> str:
         hasError = False
         try:
-            generatedOutput = self.parse()     
-        except:
+            generatedAst = self.parse()
+            self.print_asa(self.ast)     
+        except Exception:
             hasError = True       
+            generatedAst = None
         finally:
             for token in self.languageStack:
                 if token.startswith('Match:'):
                     print(token)
             
         if hasError:
-            print(f"{self.errorMessage}")            
-        #self.fs.uploadFile(os.path.join('tmp','sintatico'), 'saida.txt', 'w', generatedOutput)
-        #return generatedOutput
+            print(f"{self.errorMessage}")
+        # Não faço upload automático - retornamos a AST internamente
+        return generatedAst
+
+    def print_asa(self,node, indent=0):
+        if node is None:
+            return
+        prefix = "  " * indent
+        if node.value is not None:
+            print(f"{prefix}{node.name}: {node.value}")
+        else:
+            print(f"{prefix}{node.name}")
+        for child in node.children:
+            self.print_asa(child, indent + 1)
