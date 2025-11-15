@@ -11,7 +11,6 @@ LANGUAGE = 'language.yml'
 TOKENS_FILE = 'private_tokens.yml'
 EPSILON = "LAMBDA"
 
-# ------------------ ASA Node ------------------
 class Node:
     def __init__(self, name: str, value: Optional[str] = None, children: Optional[List['Node']] = None):
         self.name = name
@@ -30,7 +29,6 @@ class Node:
             return f"{self.name}.{self.value}"
         return f"{self.name}"
 
-# ------------------ Parser ------------------
 class Sintatico(ISintatico):
     language: Dict[str, List[List [str]]]
     index: int
@@ -55,22 +53,6 @@ class Sintatico(ISintatico):
         data = yaml.safe_load(file)
         return cast(Dict[str, List[List [str]]], data)
     
-    def print_asa(self,node: Optional[Node], level: int = 0):
-        if node is None:
-            return
-        indent = "   " * level
-
-        if node.is_leaf():
-            print(f"{indent}-{node.name}.{node.value}")
-        else:
-            print(f"{indent}-{node.name}")
-            for c in node.children:
-                if node.name == 'Expr':
-                    self.print_asa(c, level)
-                else:
-                    self.print_asa(c, level+1)
-
-
     def startConfig(self):
         """
         Carrega as configurações
@@ -106,6 +88,30 @@ class Sintatico(ISintatico):
     def printDict(self,dict):
         for k,v in dict.items():
             print(f'{k}:{v}')
+
+    def print_asa(self,node: Optional[Node], level: int = 0):
+        IGNORED = [
+            'Expr','Primay','Program1','Stmt','StmtList', 'AltExpr','CmplExpr','UnaryExpr',
+            'AndExpr1','AndExpr', 'MulExpr','MulExpr1','_VarDecl','AddExpr','OrExpr',
+            '_AltExpr','Program2',';','Primary','VarDecl','Array1','Array2','CompExpr1',
+            'AddExpr1','Ident', '_CompExpr1','CompExpr','CompOp','OrExpr1','Array','StmtList1'
+        ]
+        
+        if node is None:
+            return
+        indent = "   " * level
+        
+        if node.is_leaf():
+            print(f"{indent}-{node.name}.{node.value}")
+        else:
+            if node.name not in IGNORED:
+                print(f"{indent}-{node.name}")
+            for c in node.children:
+                if node.name in IGNORED:
+                    self.print_asa(c, level)
+                else:
+                    self.print_asa(c, level+1)
+
 
     def isTerminal(self,s,grammar):
         return s not in grammar
@@ -213,7 +219,7 @@ class Sintatico(ISintatico):
 
         self.idx = 0
         self.lookahead = self.convert(self.word[0])
-        # chama Program e retorna raiz da ASA
+
         self.ast = self.Program()
 
         if self.lookahead != '<EOF>':
@@ -226,25 +232,17 @@ class Sintatico(ISintatico):
             return self.dict.get(symbol)
         return symbol
 
-    # Helper: extrai lexema do token original (self.word[self.idx])
     def _extract_lexeme(self, raw_token: str):
-        """
-        raw_token examples: '<ID,main>', '<NUM,1>', '<LITERAL,\"abc\">', '<;>', '<{>'
-        Return (type, lexeme) where lexeme for IDs/NUM/LITERAL is the inner lexeme (without <>).
-        For simple symbols like '<;>' returns (';', None) or ('{', None).
-        """
         if not raw_token:
             return (None, None)
         if raw_token.startswith('<') and raw_token.endswith('>'):
             content = raw_token[1:-1]
-            # if contains comma, it's like ID,main
             if ',' in content:
                 parts = content.split(',', 1)
                 ttype = parts[0]
                 lex = parts[1]
                 return (ttype, lex)
             else:
-                # single symbol inside <>
                 return (content, None)
         else:
             return (raw_token, None)
@@ -254,25 +252,19 @@ class Sintatico(ISintatico):
     def match(self, tokens: set) -> Optional[Node]:
         lookaheadToken = self.getLookAheadToken()
         if lookaheadToken in list(tokens):
-            raw = self.word[self.idx]  # token original, ex '<ID,main>' ou '<;>'
+            raw = self.word[self.idx]
             ttype, lex = self._extract_lexeme(raw)
             self.languageStack.append(f"Match: {self.lookahead}")
-            self.idx += 1  # avança o índice de leitura
+            self.idx +=1
             self.lookahead = self.convert(self.word[self.idx])
 
-            # Se for ID/NUM/LITERAL -> folha com prefixo
             if lookaheadToken in {'ID', 'NUM', 'LITERAL'}:
-                # lex deve existir
                 val = lex if lex is not None else ''
                 return Node(lookaheadToken, value=val)
-            # boolean literals may appear as tokens 'true'/'false'
             if lookaheadToken in {'true', 'false'}:
                 return Node(lookaheadToken, value=lookaheadToken)
-            # Se for símbolo de agrupamento -> ignorar (None)
             if lookaheadToken in self.IGNORED_SYMBOLS:
                 return None
-            # Caso seja símbolo/operador (ex: '+', '||', '&&', '=', '<', '>', ',', ';', etc.)
-            # tratamos como nó com o próprio símbolo como nome
             return Node(lookaheadToken)
         else:
             self.errorMessage = f"ERRO: tokens esperados: {','.join(list(tokens))}. Foi encontrado {lookaheadToken}"
@@ -280,10 +272,8 @@ class Sintatico(ISintatico):
 
     def getLookAheadToken(self):
         if ',' in self.lookahead:
-            # Caso em que é um token interno Precisamos realizar o split do token
-            #<ID,main> precisamos extrair o ID
             index = 1
-            current = self.lookahead[index] # vamos pular o <
+            current = self.lookahead[index]
             token = ""
             while current != ',':
                 token+=current
@@ -294,10 +284,6 @@ class Sintatico(ISintatico):
             return self.lookahead          
     
     def computeMatch(self, type: str) -> Optional[Node]:
-        """
-        Faz o computeMatch (usado para tokens compostos no arquivo de linguagem)
-        Retorna o Node retornado por match (ou None)
-        """
         self.languageStack.append(type)
         currentSet = self.first.get(type, set())
         return self.match(currentSet)
@@ -307,7 +293,6 @@ class Sintatico(ISintatico):
         lookaheadToken = self.getLookAheadToken()
         return lookaheadToken in list(currentSet)
 
-    # --- Grammar functions: agora retornam Node (ou None para lambdas) ---
     def Program(self) -> Optional[Node]:
         node = Node("Program")
         self.languageStack.append(self.Program.__name__)
@@ -803,5 +788,4 @@ class Sintatico(ISintatico):
             
         if hasError:
             print(f"{self.errorMessage}")
-        # retornamos a AST (ou None se erro)
         return generatedAst
