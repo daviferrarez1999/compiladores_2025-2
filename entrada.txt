@@ -1,5 +1,10 @@
 char teste() {
     int x;
-    x = true || false;
+    if(x>3){
+        x = 3;
+    }
+    else {
+        x = 5;
+    }
 }
 

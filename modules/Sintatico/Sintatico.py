@@ -11,31 +11,41 @@ LANGUAGE = 'language.yml'
 TOKENS_FILE = 'private_tokens.yml'
 EPSILON = "LAMBDA"
 
-# === ASA simplificada ===
+# ------------------ ASA Node ------------------
 class Node:
-    """
-    Nó da ASA simplificada.
-    name: nome do nó (geralmente o nome da produção)
-    children: lista de nós filhos
-    value: valor (usado para folhas: ID, NUM, LITERAL, true, false)
-    """
-    def __init__(self, name: str, children: Optional[List['Node']] = None, value: Optional[str] = None):
+    def __init__(self, name: str, value: Optional[str] = None, children: Optional[List['Node']] = None):
         self.name = name
-        self.children: List[Node] = children or []
         self.value = value
+        self.children: List[Node] = children or []
 
     def add(self, node: Optional['Node']):
         if node is not None:
             self.children.append(node)
 
+    def is_leaf(self):
+        return len(self.children) == 0 and self.value is not None
+
     def __repr__(self):
-        if self.value is not None:
-            return f"Node({self.name!r}, value={self.value!r})"
-        if self.children:
-            return f"Node({self.name!r}, children={len(self.children)})"
-        return f"Node({self.name!r})"
+        if self.is_leaf():
+            return f"{self.name}.{self.value}"
+        return f"{self.name}"
 
+def print_asa(node: Optional[Node], level: int = 0):
+    if node is None:
+        return
+    indent = "   " * level
 
+    if node.is_leaf():
+        print(f"{indent}-{node.name}.{node.value}")
+    else:
+        print(f"{indent}-{node.name}")
+        for c in node.children:
+            if node.name == 'Expr':
+                print_asa(c, level)
+            else:
+                print_asa(c, level+1)
+
+# ------------------ Parser ------------------
 class Sintatico(ISintatico):
     language: Dict[str, List[List [str]]]
     index: int
@@ -202,7 +212,6 @@ class Sintatico(ISintatico):
 
         self.idx = 0
         self.lookahead = self.convert(self.word[0])
-        # self.resp = False
         # chama Program e retorna raiz da ASA
         self.ast = self.Program()
 
@@ -216,25 +225,62 @@ class Sintatico(ISintatico):
             return self.dict.get(symbol)
         return symbol
 
+    # Helper: extrai lexema do token original (self.word[self.idx])
+    def _extract_lexeme(self, raw_token: str):
+        """
+        raw_token examples: '<ID,main>', '<NUM,1>', '<LITERAL,\"abc\">', '<;>', '<{>'
+        Return (type, lexeme) where lexeme for IDs/NUM/LITERAL is the inner lexeme (without <>).
+        For simple symbols like '<;>' returns (';', None) or ('{', None).
+        """
+        if not raw_token:
+            return (None, None)
+        if raw_token.startswith('<') and raw_token.endswith('>'):
+            content = raw_token[1:-1]
+            # if contains comma, it's like ID,main
+            if ',' in content:
+                parts = content.split(',', 1)
+                ttype = parts[0]
+                lex = parts[1]
+                return (ttype, lex)
+            else:
+                # single symbol inside <>
+                return (content, None)
+        else:
+            return (raw_token, None)
+
+    # Symbols to ignore as nodes (grouping tokens)
+    IGNORED_SYMBOLS = {'(', ')', '{', '}', '[', ']'}
+
     def match(self, tokens: set) -> Optional[Node]:
         """
         Faz o match do próximo token com o conjunto tokens.
-        Retorna Node apenas para tokens semânticos (ID, NUM, LITERAL, true, false)
-        Caso contrário retorna None (não gerar nós para símbolos literais).
+        Retorna:
+         - Node para folhas semânticas (ID, NUM, LITERAL, true, false) com value=lexema
+         - Node para operadores/símbolos relevantes (ex: '+', '||', '&&', '=', '<', '==', ',',';')
+         - None para símbolos de agrupamento que não queremos na ASA (parens, braces...)
         """
         lookaheadToken = self.getLookAheadToken()
         if lookaheadToken in list(tokens):
-            # captura valor completo antes de avançar
-            value = self.lookahead
+            raw = self.word[self.idx]  # token original, ex '<ID,main>' ou '<;>'
+            ttype, lex = self._extract_lexeme(raw)
             self.languageStack.append(f"Match: {self.lookahead}")
             self.idx += 1  # avança o índice de leitura
             self.lookahead = self.convert(self.word[self.idx])
 
-            # Tokens que consideramos folhas semânticas na ASA simplificada
-            if lookaheadToken in {'ID', 'NUM', 'LITERAL', 'true', 'false'}:
-                return Node(lookaheadToken, value=value)
-            else:
+            # Se for ID/NUM/LITERAL -> folha com prefixo
+            if lookaheadToken in {'ID', 'NUM', 'LITERAL'}:
+                # lex deve existir
+                val = lex if lex is not None else ''
+                return Node(lookaheadToken, value=val)
+            # boolean literals may appear as tokens 'true'/'false'
+            if lookaheadToken in {'true', 'false'}:
+                return Node(lookaheadToken, value=lookaheadToken)
+            # Se for símbolo de agrupamento -> ignorar (None)
+            if lookaheadToken in self.IGNORED_SYMBOLS:
                 return None
+            # Caso seja símbolo/operador (ex: '+', '||', '&&', '=', '<', '>', ',', ';', etc.)
+            # tratamos como nó com o próprio símbolo como nome
+            return Node(lookaheadToken)
         else:
             self.errorMessage = f"ERRO: tokens esperados: {','.join(list(tokens))}. Foi encontrado {lookaheadToken}"
             raise SyntaxError(f"ERRO: tokens esperados: {','.join(list(tokens))}. Foi encontrado {lookaheadToken}")
@@ -272,85 +318,62 @@ class Sintatico(ISintatico):
     def Program(self) -> Optional[Node]:
         node = Node("Program")
         self.languageStack.append(self.Program.__name__)
-        child = self.Type()
-        node.add(child)
-        child = self.Program1()
-        node.add(child)
+        node.add(self.Type())
+        node.add(self.Program1())
         return node
 
     def Type(self) -> Optional[Node]:
         node = Node("Type")
-        child = self.computeMatch('Type')
-        node.add(child)
+        node.add(self.computeMatch('Type'))
         return node
 
     def Program1(self) -> Optional[Node]:
         node = Node("Program1")
-        child = self.computeMatch('Program1')
-        node.add(child)
-        child = self.Program2()
-        node.add(child)
+        node.add(self.computeMatch('Program1'))
+        node.add(self.Program2())
         return node
 
     def Program2(self) -> Optional[Node]:
         node = Node("Program2")
         self.languageStack.append(self.Program2.__name__)
         if self.lookahead == '(':
-            child = self.FunctionDecl()
-            node.add(child)
+            node.add(self.FunctionDecl())
         else:
-            child = self.IdList()
-            node.add(child)
-            child = self.Program()
-            node.add(child)
+            node.add(self.IdList())
+            node.add(self.Program())
         return node
         
     def IdList(self) -> Optional[Node]:
         node = Node("IdList")
         self.languageStack.append(self.IdList.__name__)
-        child = self.match({'ID'})
-        node.add(child)
-        child = self.Array1()
-        node.add(child)
+        node.add(self.match({'ID'}))
+        node.add(self.Array1())
         return node
 
     def FunctionDecl(self) -> Optional[Node]:
         node = Node("FunctionDecl")
-        child = self.computeMatch('FunctionDecl')
-        node.add(child)
-        child = self.FormalList()
-        node.add(child)
-        child = self.match({')'})
-        node.add(child)
-        child = self.match({'{'})
-        node.add(child)
-        child = self.VarDecl()
-        node.add(child)
-        child = self.StmtList()
-        node.add(child)
-        child = self.match({'}'})
-        node.add(child)
-        child = self.FunctionDecl1()
-        node.add(child)
+        node.add(self.computeMatch('FunctionDecl'))
+        node.add(self.FormalList())
+        node.add(self.match({')'}))
+        node.add(self.match({'{'}))
+        node.add(self.VarDecl())
+        node.add(self.StmtList())
+        node.add(self.match({'}'}))
+        node.add(self.FunctionDecl1())
         return node
        
     def FormalList(self) -> Optional[Node]:
         node = Node("FormalList")
         self.languageStack.append(self.FormalList.__name__)
-        child = self.lambdaWrapper('_FormalList')
-        node.add(child)
+        node.add(self.lambdaWrapper('_FormalList'))
         return node
     
     def _FormalList(self) -> Optional[Node]:
         node = Node("_FormalList")
-        child = self.Type()
-        node.add(child)
-        child = self.match({'ID'})
-        node.add(child)
-        child = self.Array()
-        node.add(child)
-        child = self.FormalRest()
-        node.add(child)
+        node.add(self.Type())
+        node.add(self.match({'ID'}))
+        node.add(self.Array())
+        node.add(self.FormalRest())
         return node
 
     def lambdaWrapper(self, functionName) -> Optional[Node]:
@@ -376,37 +399,29 @@ class Sintatico(ISintatico):
     def VarDecl(self) -> Optional[Node]:
         node = Node("VarDecl")
         self.languageStack.append(self.VarDecl.__name__)
-        child = self.lambdaWrapper('_VarDecl')
-        node.add(child)
+        node.add(self.lambdaWrapper('_VarDecl'))
         return node
 
     def _VarDecl(self) -> Optional[Node]:
         node = Node("_VarDecl")
-        child = self.Type()
-        node.add(child)
-        child = self.IdList()
-        node.add(child)
-        child = self.match({';'})
-        node.add(child)
-        child = self.VarDecl()
-        node.add(child)
+        node.add(self.Type())
+        node.add(self.IdList())
+        node.add(self.match({';'}))
+        node.add(self.VarDecl())
         return node
 
 
     def StmtList(self) -> Optional[Node]:
         node = Node("StmtList")
         self.languageStack.append(self.StmtList.__name__)
-        child = self.Stmt()
-        node.add(child)
-        child = self.StmtList1()
-        node.add(child)
+        node.add(self.Stmt())
+        node.add(self.StmtList1())
         return node
 
     def Stmt(self) -> Optional[Node]:
         node = Node("Stmt")
         self.languageStack.append(self.Stmt.__name__)
         la = self.lookahead
-        # dispatch similar to match/case
         match la:
             case 'if':
                 node.add(self.match({'if'}))
@@ -489,8 +504,7 @@ class Sintatico(ISintatico):
     def Ident(self) -> Optional[Node]:
         node = Node("Ident")
         self.languageStack.append(self.Ident.__name__)
-        child = self.lambdaWrapper('_Ident')
-        node.add(child)
+        node.add(self.lambdaWrapper('_Ident'))
         return node        
         
     def _Ident(self) -> Optional[Node]:
@@ -601,8 +615,7 @@ class Sintatico(ISintatico):
 
     def CompOp(self) -> Optional[Node]:
         node = Node("CompOp")
-        child = self.computeMatch('CompOp')
-        node.add(child)
+        node.add(self.computeMatch('CompOp'))
         return node
 
     def AddExpr(self) -> Optional[Node]:
@@ -627,8 +640,7 @@ class Sintatico(ISintatico):
 
     def AddOp(self) -> Optional[Node]:
         node = Node("AddOp")
-        child = self.computeMatch('AddOp')
-        node.add(child)
+        node.add(self.computeMatch('AddOp'))
         return node
 
     def MulExpr(self) -> Optional[Node]:
@@ -788,11 +800,11 @@ class Sintatico(ISintatico):
     def input(self, buffer):
         self.buffer = buffer
         
-    def output(self) -> str:
+    def output(self) -> Optional[Node]:
         hasError = False
         try:
-            generatedAst = self.parse()
-            self.print_asa(self.ast)     
+            generatedAst = self.parse() 
+            print_asa(generatedAst)
         except Exception:
             hasError = True       
             generatedAst = None
@@ -803,16 +815,5 @@ class Sintatico(ISintatico):
             
         if hasError:
             print(f"{self.errorMessage}")
-        # Não faço upload automático - retornamos a AST internamente
+        # retornamos a AST (ou None se erro)
         return generatedAst
-
-    def print_asa(self,node, indent=0):
-        if node is None:
-            return
-        prefix = "  " * indent
-        if node.value is not None:
-            print(f"{prefix}{node.name}: {node.value}")
-        else:
-            print(f"{prefix}{node.name}")
-        for child in node.children:
-            self.print_asa(child, indent + 1)

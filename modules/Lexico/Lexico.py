@@ -200,7 +200,6 @@ class Lexico(ILexico):
                         self.setReadingMode()
                     self.evenCountBars = True
             elif self.mode == LexicoModes.READING:
-                print(f'word={word}')
                 if not (self.isLetter(char) or char == '_' or self.isNumber(char)):
                     if self.isPrivateToken(word):
                         print(f'word+char={word+char}')

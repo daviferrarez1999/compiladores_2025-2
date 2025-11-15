@@ -1,5 +1,7 @@
 if:
   output: <IF>
+else:
+  output: <ELSE>
 while:
   output: <WHILE>
 print:
@@ -74,3 +76,4 @@ int:
   output: <MOD>
 ";":
   output: <SEMICOLON>
+  
