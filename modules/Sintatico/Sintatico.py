@@ -30,21 +30,6 @@ class Node:
             return f"{self.name}.{self.value}"
         return f"{self.name}"
 
-def print_asa(node: Optional[Node], level: int = 0):
-    if node is None:
-        return
-    indent = "   " * level
-
-    if node.is_leaf():
-        print(f"{indent}-{node.name}.{node.value}")
-    else:
-        print(f"{indent}-{node.name}")
-        for c in node.children:
-            if node.name == 'Expr':
-                print_asa(c, level)
-            else:
-                print_asa(c, level+1)
-
 # ------------------ Parser ------------------
 class Sintatico(ISintatico):
     language: Dict[str, List[List [str]]]
@@ -70,6 +55,22 @@ class Sintatico(ISintatico):
         data = yaml.safe_load(file)
         return cast(Dict[str, List[List [str]]], data)
     
+    def print_asa(self,node: Optional[Node], level: int = 0):
+        if node is None:
+            return
+        indent = "   " * level
+
+        if node.is_leaf():
+            print(f"{indent}-{node.name}.{node.value}")
+        else:
+            print(f"{indent}-{node.name}")
+            for c in node.children:
+                if node.name == 'Expr':
+                    self.print_asa(c, level)
+                else:
+                    self.print_asa(c, level+1)
+
+
     def startConfig(self):
         """
         Carrega as configurações
@@ -248,17 +249,9 @@ class Sintatico(ISintatico):
         else:
             return (raw_token, None)
 
-    # Symbols to ignore as nodes (grouping tokens)
-    IGNORED_SYMBOLS = {'(', ')', '{', '}', '[', ']'}
+    IGNORED_SYMBOLS = {'(', ')', '{', '}'}
 
     def match(self, tokens: set) -> Optional[Node]:
-        """
-        Faz o match do próximo token com o conjunto tokens.
-        Retorna:
-         - Node para folhas semânticas (ID, NUM, LITERAL, true, false) com value=lexema
-         - Node para operadores/símbolos relevantes (ex: '+', '||', '&&', '=', '<', '==', ',',';')
-         - None para símbolos de agrupamento que não queremos na ASA (parens, braces...)
-        """
         lookaheadToken = self.getLookAheadToken()
         if lookaheadToken in list(tokens):
             raw = self.word[self.idx]  # token original, ex '<ID,main>' ou '<;>'
@@ -377,18 +370,13 @@ class Sintatico(ISintatico):
         return node
 
     def lambdaWrapper(self, functionName) -> Optional[Node]:
-        """
-        Executa produções opcionais. Se a produção falhar, restaura índice e retorna None.
-        """
         currentIndex = self.idx
         try:
             func = getattr(self, functionName)
             return func()
         except Exception:
-            # restaura estado se falhar
             self.idx = currentIndex
             self.lookahead = self.convert(self.word[self.idx])
-            # remove o último registro do languageStack se presente
             if self.languageStack:
                 try:
                     self.languageStack.pop()
@@ -804,7 +792,7 @@ class Sintatico(ISintatico):
         hasError = False
         try:
             generatedAst = self.parse() 
-            print_asa(generatedAst)
+            self.print_asa(generatedAst)
         except Exception:
             hasError = True       
             generatedAst = None

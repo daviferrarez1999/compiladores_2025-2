@@ -202,7 +202,6 @@ class Lexico(ILexico):
             elif self.mode == LexicoModes.READING:
                 if not (self.isLetter(char) or char == '_' or self.isNumber(char)):
                     if self.isPrivateToken(word):
-                        print(f'word+char={word+char}')
                         if not self.isPrivateToken(word+char):
                             output += self.outputPrivateToken(word)
                             word = self.computeChar(char)
