@@ -1,10 +1,5 @@
-char teste() {
+char t, k;
+char teste(char a, char b) {
     int x;
-    if(x>3){
-        x = 3;
-    }
-    else {
-        x = 5;
-    }
+    b[4] = 44 + 99 + 3 / 5;
 }
-
