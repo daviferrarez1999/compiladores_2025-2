@@ -1,0 +1,48 @@
+int x, y;
+int f[100];
+
+int multiplica(float a, float b) {
+    float res;
+    res = a * b;
+    return res;
+}
+
+int fib(int k) {
+    if (k == 0 || k == 1) {
+        return 1;
+    } else {
+        if (f[k] == 0) {
+            f[k] = fib(k - 1) + fib(k - 2);
+            return f[k];
+        } else {
+            return f[k];
+        }
+    }
+}
+
+int main() {
+    float x, y, z;
+    x = 3.0;
+    y = 20.5;
+
+    z = multiplica(x, y);
+    print(z);
+
+    int num;
+    num = 20;
+    print(fib(num));
+
+    int i;
+    i = 1;
+    print("Terminando Programa");
+
+    while (i <= 10) {
+        print(i);
+        if (i == 9)
+            break;
+        else
+            i = i + 1;
+    }
+
+    return 0;
+}
