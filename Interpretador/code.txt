@@ -1,0 +1,41 @@
+LABEL foo
+LD r1 0
+MULT r1 a0 a1
+LD ra r1
+RET ra
+
+LABEL main
+LD r1 2
+LD r2 3
+PARAM r1
+PARAM r2
+CALL foo 2
+LD r3 ra
+LD r4 5
+BGT r3 r4 L1
+J L2
+
+LABEL L1
+LD r5 1
+ADD r3 r3 r5
+J L3
+
+LABEL L2
+LD r6 2
+ADD r3 r3 r6
+
+LABEL L3
+LD r7 0
+LD r8 0
+LD r9 5
+
+LABEL L4
+BGE r7 r9 L5
+ADD r8 r8 r7
+LD r10 1
+ADD r7 r7 r10
+J L4
+
+LABEL L5
+LD ra 0
+RET ra
