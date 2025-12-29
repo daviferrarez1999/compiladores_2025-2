@@ -1,0 +1,79 @@
+﻿ALLOC f 100 0
+
+LABEL multiplica
+LD res 0.0
+MULT res a0 a1
+RET res
+
+LABEL fib
+BEQ a0 0 FIB_RET_1
+BEQ a0 1 FIB_RET_1
+J FIB_CHECK_MEMO
+
+LABEL FIB_RET_1
+RET 1
+
+LABEL FIB_CHECK_MEMO
+LD t_idx 0
+LD t_val 0
+LD t_idx a0
+LD t_val f$t_idx
+BNE t_val 0 FIB_RETURN_MEMO
+J FIB_CALC
+
+LABEL FIB_RETURN_MEMO
+RET t_val
+
+LABEL FIB_CALC
+LD t1 0
+LD t2 0
+LD t3 0
+LD r1 0
+LD r2 0
+SUB t1 a0 1
+PARAM t1
+CALL fib 1
+LD r1 ra
+SUB t2 a0 2
+PARAM t2
+CALL fib 1
+LD r2 ra
+ADD t3 r1 r2
+LD t_idx a0
+LD f$t_idx t3
+RET t3
+
+LABEL main
+LD x 0.0
+LD y 0.0
+LD z 0.0
+LD num 0
+LD res 0
+LD i 0
+LD x 3.0
+LD y 20.5
+PARAM x
+PARAM y
+CALL multiplica 2
+LD z ra
+PRINT z
+LD num 20
+PARAM num
+CALL fib 1
+LD res ra
+PRINT res
+LD i 0
+PRINT "Terminando Programa"
+
+LABEL WHILE_START
+BLE i 10 WHILE_BODY
+J WHILE_END
+
+LABEL WHILE_BODY
+PRINT i
+BEQ i 9 WHILE_END
+ADD i i 1
+J WHILE_START
+
+LABEL WHILE_END
+RET 0

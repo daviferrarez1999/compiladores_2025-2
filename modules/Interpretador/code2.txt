@@ -1,0 +1,12 @@
+LD teste 5
+LD teste2 2
+LD teste3 0
+ADD teste3 teste teste2
+LD teste teste3
+LABEL main
+LD r1 2
+LD r2 3
+ADD r1 r1 r2
+PRINT r1
+PRINT r2
+RET 0
