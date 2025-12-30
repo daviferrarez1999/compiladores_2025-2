@@ -1,0 +1,273 @@
+{
+    "Program": [
+        { "type": "VarDecl", "varType": "int", "id": "x"},
+        { "type": "VarDecl", "varType": "int", "id": "y"},
+        {
+            "type": "ArrayDecl",
+            "varType": "int",
+            "id": "f",
+            "size": 100
+        },
+        {
+            "type": "FunctionDecl",
+            "id": "multiplica",
+            "returnType": "float",
+            "params": [
+                { "type": "Param", "varType": "float", "id": "a" },
+                { "type": "Param", "varType": "float", "id": "b" }
+            ],
+            "body": [
+                {
+                    "type": "VarDecl",
+                    "varType": "float",
+                    "id": "res"
+                },
+                {
+                    "type": "Assign",
+                    "lvalue": { "type": "Identifier", "name": "res" },
+                    "rvalue": {
+                        "type": "BinaryOp",
+                        "op": "*",
+                        "lvalue": { "type": "Identifier", "name": "a" },
+                        "rvalue": { "type": "Identifier", "name": "b" }
+                    }
+                },
+                { "type": "Return", "value": { "type": "Identifier", "name": "res" } }
+            ]
+        },
+        {
+            "type": "FunctionDecl",
+            "id": "fib",
+            "returnType": "int",
+            "params": [
+                { "type": "Param", "varType": "int", "id": "k" }
+            ],
+            "body": [
+                {
+                    "type":"If",
+                    "condition": {
+                        "type": "BinaryOp",
+                        "op": "||",
+                        "lvalue": {
+                            "type": "BinaryOp",
+                            "op": "==",
+                            "lvalue": { "type": "Identifier", "name": "k" },
+                            "rvalue": { "type": "Literal", "value": 0 }
+                        },
+                        "rvalue": {
+                            "type": "BinaryOp",
+                            "op": "==",
+                            "lvalue": { "type": "Identifier", "name": "k" },
+                            "rvalue": { "type": "Literal", "value": 1 }
+                        }
+                    },
+                    "then": [
+                        {
+                            "type": "Return",
+                            "value":  { "type": "Literal", "value": 1 }
+                        }
+                    ],
+                    "else": [
+                        {
+                            "type":"If",
+                            "condition": {
+                                "type": "BinaryOp",
+                                "op": "==",
+                                "lvalue": { 
+                                    "type": "ArrayAccess", 
+                                    "array": "f",
+                                    "index": { "type": "Identifier", "name": "k" }
+                                },
+                                "rvalue": { "type": "Literal", "value": 0 }
+                            },
+                            "then": [
+                                {
+                                    "type": "Assign",
+                                    "lvalue": { 
+                                        "type": "ArrayAccess", 
+                                        "array": "f",
+                                        "index": { "type": "Identifier", "name": "k" }
+                                    },
+                                    "rvalue": {
+                                        "type": "BinaryOp",
+                                        "op": "+",
+                                        "lvalue": {
+                                            "type": "Call",
+                                            "id": "fib",
+                                            "args": [
+                                                {
+                                                    "type": "BinaryOp",
+                                                    "op": "-",
+                                                    "lvalue": { "type": "Identifier", "name": "k" },
+                                                    "rvalue": { "type": "Literal", "value": 1 }
+                                                }
+                                            ]
+                                        },
+                                        "rvalue": {
+                                            "type": "Call",
+                                            "id": "fib",
+                                            "args": [
+                                                {
+                                                    "type": "BinaryOp",
+                                                    "op": "-",
+                                                    "lvalue": { "type": "Identifier", "name": "k" },
+                                                    "rvalue": { "type": "Literal", "value": 2 }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "type": "Return",
+                                    "value": {
+                                        "type": "ArrayAccess",
+                                        "array": "f",
+                                        "index": { "type": "Identifier", "name": "k"}
+                                    }
+                                }
+                            ],
+                            "else": [
+                                    {
+                                        "type": "Return",
+                                        "value": {
+                                            "type": "ArrayAccess",
+                                            "array": "f",
+                                            "index": { "type": "Identifier", "name": "k" }
+                                        }
+                                    }
+                                ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "FunctionDecl",
+            "id": "main",
+            "returnType": "int",
+            "params": [],
+            "body": [
+                { "type": "VarDecl", "varType": "float", "id": "a" },
+                { "type": "VarDecl", "varType": "float", "id": "b" },
+                { "type": "VarDecl", "varType": "float", "id": "c" },
+                {
+                    "type": "Assign",
+                    "lvalue": { "type": "Identifier", "name": "a" },
+                    "rvalue": {
+                        "type": "BinaryOp",
+                        "op": "+",
+                        "lvalue": { "type": "Literal", "value": 5.2 },
+                        "rvalue": {
+                            "type": "BinaryOp",
+                            "op": "*",
+                            "lvalue": {
+                                "type": "BinaryOp",
+                                "op": "/",
+                                "lvalue": { "type": "Literal", "value": 7.3 },
+                                "rvalue": { "type": "Literal", "value": 8 }
+                            },
+                            "rvalue": { "type": "Literal", "value": 4 }
+                        }
+                    }
+                },
+                {
+                    "type": "Assign",
+                    "lvalue": { "type": "Identifier", "name": "c" },
+                    "rvalue": {
+                        "type": "BinaryOp",
+                        "op": "*",
+                        "lvalue": { "type": "Literal", "value": 7 },
+                        "rvalue": { "type": "Identifier", "name": "a" }
+                    }
+                },
+
+                {
+                    "type": "Assign",
+                    "lvalue": { "type": "Identifier", "name": "c" },
+                    "rvalue": {
+                        "type": "Call",
+                        "id": "multiplica",
+                        "args": [
+                            { "type": "Identifier", "name": "a" },
+                            { "type": "Identifier", "name": "b" }
+                        ]
+                    }
+                },
+
+                { 
+                    "type": "Print", 
+                    "value": { "type": "Identifier", "name": "c" } 
+                },
+
+                { "type": "VarDecl", "varType": "int", "id": "num" },
+
+                {
+                    "type": "Assign",
+                    "lvalue": { "type": "Identifier", "name": "num" },
+                    "rvalue": { "type": "Literal", "value": 20 }
+                },
+
+                {
+                    "type": "Print",
+                    "value": {
+                        "type": "Call",
+                        "id": "fib",
+                        "args": [{ "type": "Identifier", "name": "num" }]
+                    }
+                },
+
+                { "type": "VarDecl", "varType": "int", "id": "i" },
+                
+                {
+                    "type": "Assign",
+                    "lvalue": { "type": "Identifier", "name": "i" },
+                    "rvalue": { "type": "Literal", "value": 1 }
+                },
+
+                {
+                    "type": "Print",
+                    "value": { "type": "Literal", "value": "Terminando Programa" }
+                },
+
+                {
+                    "type":"While",
+                    "condition": {
+                     "type": "BinaryOp",
+                        "op": "<=",
+                        "lvalue": { "type": "Identifier", "name": "i" },
+                        "rvalue": { "type": "Literal", "value": 10 }
+                    },
+                    "body": [
+                        { "type": "Print", "value": { "type": "Identifier", "name": "i" } },
+                        
+                        {
+                            "type":"If",
+                            "condition": {
+                                "type": "BinaryOp",
+                                "op": "!=",
+                                "lvalue": { "type": "Identifier", "name": "i" },
+                                "rvalue": { "type": "Literal", "value": 9 }
+                            },
+                            "then": [
+                                {
+                                    "type": "Assign",
+                                    "lvalue": { "type": "Identifier", "name": "i" },
+                                    "rvalue": {
+                                        "type": "BinaryOp",
+                                        "op": "+",
+                                        "lvalue": { "type": "Identifier", "name": "i" },
+                                        "rvalue": { "type": "Literal", "value": 1 }
+                                    }
+                                }
+                            ],
+                            "else": [
+                                { "type": "Break" }
+                            ]
+                        }
+                    ]
+                },
+                { "type": "Return", "value": { "type": "Literal", "value": 0 } }
+            ]
+        }
+    ]     
+}
