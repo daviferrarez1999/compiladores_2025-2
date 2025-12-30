@@ -848,8 +848,8 @@ class Sintatico(ISintatico):
         
     def output(self) -> Optional[Node]:
         hasError = False
-        generatedAst = self.parse() 
         try:
+            generatedAst = self.parse() 
             self.print_asa(generatedAst)
         except Exception:
             hasError = True       

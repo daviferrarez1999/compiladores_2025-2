@@ -1,0 +1,33 @@
+﻿STACK
+    Frame(
+        VAR int 0
+        VAR float 0.0
+        VAR func Frame (
+            VAR
+            VAR
+        )
+        VAR func Frame (
+            ARR
+            VAR
+        )
+    )
+
+-----------------------------
+STACK
+    Frame(
+        VAR int 0
+        VAR float 0.0
+        VAR func pos(1)
+        VAR float 0.0
+        VAR func pos(2)
+    )
+    Frame (
+        VAR
+        VAR
+    )
+    Frame (
+        ARR
+        VAR
+    )
+
+    
