@@ -100,7 +100,7 @@ def set_value(id, val):
         if isinstance(v, float): return 'float'
         if isinstance(v, int): return 'int'
         if isinstance(v, list): return 'array'
-        return 'str'
+        return 'char'
 
     # Helper para realizar o casting e manter o dicionário
     def prepare_storage(old_data, new_val):
@@ -113,6 +113,7 @@ def set_value(id, val):
         try:
             if t == 'float': final_val = float(new_val)
             elif t == 'int': final_val = int(new_val)
+            elif t == 'char': final_val = chr(new_val)
             else: final_val = new_val
         except:
             final_val = new_val
@@ -252,7 +253,7 @@ def PARAM():
     val = to_value(a)
     
     type = 'float' if isinstance(val, float) else 'int'
-    if isinstance(val, str): type = 'str'
+    if isinstance(val, str): type = 'char'
     
     PARAMETERS.append({'value': val, 'type': type})
     
@@ -280,7 +281,7 @@ def RETURN():
     
     val = to_value(a)
     type = 'float' if isinstance(val, float) else 'int'
-    if isinstance(val, str): type = 'str'
+    if isinstance(val, str): type = 'char'
     
     GLOBALS['ra'] = {'value': val, 'type': type}
     
