@@ -100,7 +100,7 @@ class C3EGenerator:
         # Se um valor for um call, então é preciso pegar o valor no ra
         t1 = self.gen(node["lvalue"])
         if node["lvalue"]["type"] == "Call":
-            t1 = self.temp.new()        # t1 = None se lvalue for um Call
+            t1 = self.temp.new()
             self.emit(f"LD {t1} ra")
 
         t2 = self.gen(node["rvalue"])
@@ -122,29 +122,8 @@ class C3EGenerator:
     def gen_Return(self,node):
         self.emit(f"RET {self.gen(node["value"])}")
 
-    def gen_Logic(self,node,label_true,label_false):
-        lvalue = self.gen(node["lvalue"])
-        rvalue = self.gen(node["rvalue"])
-        op = node["op"]
-
-        if op in ("==", "!=", "<", "<=", ">", ">="):
-            branch = {
-                "==": "BEQ",
-                "!=": "BNE",
-                "<":  "BLT",
-                "<=": "BLE",
-                ">":  "BGT",
-                ">=": "BGE",
-            }[op]
-
-            self.emit(f"{branch} {lvalue} {rvalue} {label_true}")
-            self.emit(f"J {label_false}")
-        
-        elif op == "&&":
-            pass
-        elif op == '||':
-            pass
-
+    def gen_Logic(self,node):
+        self.emit("Logic")
 
     def gen_If(self,node):
         label_then = self.label.new('then')
@@ -152,7 +131,7 @@ class C3EGenerator:
         label_endif = self.label.new('endif')
 
         # Condição
-        self.gen_Logic(node["condition"], label_then, label_else)
+        self.gen_Logic(node["condition"])
 
         # Then
         self.emit(f"LABEL {label_then}")
@@ -179,9 +158,28 @@ class C3EGenerator:
     def gen_Print(self,node):
         value = self.gen(node["value"])
         # Verifica se value é uma string com espaços
-        if ' ' in value:
+        if isinstance(value,str) and ' ' in value:
             value = f'"{value}"'
         self.emit(f"PRINT {value}")
     
+    def gen_Break(self,node):
+        self.emit(f"J {self.loop_end_stack[-1]}")   # Vai para o final do último while aberto
+
     def gen_While(self,node):
-        self.emit("While")
+        label_cond = self.label.new("while")
+        label_body = self.label.new("body")
+        label_end  = self.label.new("endwhile")
+
+        self.loop_end_stack.append(label_end)
+
+        self.emit(f"LABEL {label_cond}")
+        self.gen_Logic(node["condition"])
+
+        self.emit(f"LABEL {label_body}")
+        for s in node["body"]:
+            self.gen(s)
+
+        self.emit(f"J {label_cond}")
+        self.emit(f"LABEL {label_end}")
+
+        self.loop_end_stack.pop()
