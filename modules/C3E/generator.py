@@ -114,16 +114,20 @@ class C3EGenerator:
         self.emit(f"RET {self.gen(node["value"])}")
 
     def gen_If(self,node):
-        return "If"
+        self.emit("If")
     
     def gen_Logic(self,node):
-        return "Logic"
+        self.emit("Logic")
     
     def gen_Call(self,node):
-        return "Call"
+        self.emit("Call")
     
     def gen_Print(self,node):
-        return "Print"
+        value = self.gen(node["value"])
+        # Verifica se value é uma string com espaços
+        if ' ' in value:
+            value = f'"{value}"'
+        self.emit(f"PRINT {value}")
     
     def gen_While(self,node):
-        return "While"
+        self.emit("While")
