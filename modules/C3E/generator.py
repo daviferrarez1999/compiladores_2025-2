@@ -4,7 +4,7 @@ from .temp import TempGen
 class C3EGenerator:
     def __init__(self,asa):
         self.asa = asa
-        self.code = []
+        self.code: list[str] = []
         self.temp = TempGen()
         self.label = LabelGen()
         self.loop_end_stack = []
@@ -16,7 +16,6 @@ class C3EGenerator:
         }
 
         self.aux_params = {}    # Variável auxiliar para identificar argumentos (x = a0, y = a1...)
-
 
     def print_code(self):
         print('C3E:')
@@ -53,9 +52,7 @@ class C3EGenerator:
         id = node["id"]
         size = node["size"]
 
-        self.emit(
-            f"ALLOC {id} {size} {self.default_value[varType]}"
-        )
+        self.emit(f"ALLOC {id} {size} {self.default_value[varType]}")
 
     def gen_FunctionDecl(self,node):
         self.emit("")   # Espaçamento
@@ -73,7 +70,8 @@ class C3EGenerator:
             self.gen(stmt)
 
         # Garante que toda função terá um return
-        self.emit(f'RET {self.default_value[returnType]}')
+        if self.code[-1].split(' ')[0] != "RET":
+            self.emit(f'RET {self.default_value[returnType]}')
         self.aux_params = {}
 
     def find_arg(self,id):
@@ -99,9 +97,10 @@ class C3EGenerator:
             self.emit(f"LD {lvalue} {rvalue}")
 
     def gen_BinaryOp(self,node):
+        # Se um valor for um call, então é preciso pegar o valor no ra
         t1 = self.gen(node["lvalue"])
         if node["lvalue"]["type"] == "Call":
-            t1 = self.temp.new()
+            t1 = self.temp.new()        # t1 = None se lvalue for um Call
             self.emit(f"LD {t1} ra")
 
         t2 = self.gen(node["rvalue"])
@@ -123,11 +122,50 @@ class C3EGenerator:
     def gen_Return(self,node):
         self.emit(f"RET {self.gen(node["value"])}")
 
+    def gen_Logic(self,node,label_true,label_false):
+        lvalue = self.gen(node["lvalue"])
+        rvalue = self.gen(node["rvalue"])
+        op = node["op"]
+
+        if op in ("==", "!=", "<", "<=", ">", ">="):
+            branch = {
+                "==": "BEQ",
+                "!=": "BNE",
+                "<":  "BLT",
+                "<=": "BLE",
+                ">":  "BGT",
+                ">=": "BGE",
+            }[op]
+
+            self.emit(f"{branch} {lvalue} {rvalue} {label_true}")
+            self.emit(f"J {label_false}")
+        
+        elif op == "&&":
+            pass
+        elif op == '||':
+            pass
+
+
     def gen_If(self,node):
-        self.emit("If")
-    
-    def gen_Logic(self,node):
-        self.emit("Logic")
+        label_then = self.label.new('then')
+        label_else = self.label.new('else')
+        label_endif = self.label.new('endif')
+
+        # Condição
+        self.gen_Logic(node["condition"], label_then, label_else)
+
+        # Then
+        self.emit(f"LABEL {label_then}")
+        for stmt in node["then"]:
+            self.gen(stmt)
+        self.emit(f"J {label_endif}")
+
+        # Else
+        self.emit(f"LABEL {label_else}")
+        for stmt in node["else"]:
+            self.gen(stmt)
+        
+        self.emit(f"LABEL {label_endif}")
     
     def gen_Call(self,node):
         size = 0
