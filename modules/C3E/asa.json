@@ -185,12 +185,17 @@
                     "type": "Assign",
                     "lvalue": { "type": "Identifier", "name": "c" },
                     "rvalue": {
-                        "type": "Call",
-                        "id": "multiplica",
-                        "args": [
-                            { "type": "Identifier", "name": "a" },
-                            { "type": "Identifier", "name": "b" }
-                        ]
+                        "type": "BinaryOp",
+                        "op": "*",
+                        "lvalue": {
+                            "type": "Call",
+                            "id": "multiplica",
+                            "args": [
+                                { "type": "Identifier", "name": "a" },
+                                { "type": "Identifier", "name": "b" }
+                            ]
+                        },
+                        "rvalue": { "type": "Literal", "value": 1 }
                     }
                 },
 
