@@ -39,26 +39,26 @@ class C3EGenerator:
         method = f"gen_{node['type']}"
         return getattr(self,method)(node)
     
-    def emmit(self,inst):
+    def emit(self,inst):
         self.code.append(inst)
 
     def gen_VarDecl(self,node):
         varType = node["varType"]
         id = node["id"]
 
-        self.emmit(f"LD {id} {self.default_value[varType]}")
+        self.emit(f"LD {id} {self.default_value[varType]}")
 
     def gen_ArrayDecl(self,node):
         varType = node["varType"]
         id = node["id"]
         size = node["size"]
 
-        self.emmit(
+        self.emit(
             f"ALLOC {id} {size} {self.default_value[varType]}"
         )
 
     def gen_FunctionDecl(self,node):
-        self.emmit("")   # Espaçamento
+        self.emit("")   # Espaçamento
 
         id = node["id"]
         returnType = node["returnType"]
@@ -67,13 +67,13 @@ class C3EGenerator:
         for i,p in enumerate(node["params"]):
             self.aux_params[p["id"]] = f'a{i}'
 
-        self.emmit(f'LABEL {id}')
+        self.emit(f'LABEL {id}')
 
         for stmt in body:
             self.gen(stmt)
 
         # Garante que toda função terá um return
-        self.emmit(f'RET {self.default_value[returnType]}')
+        self.emit(f'RET {self.default_value[returnType]}')
         self.aux_params = {}
 
     def find_arg(self,id):
@@ -93,12 +93,37 @@ class C3EGenerator:
         lvalue = self.gen(node["lvalue"])
         rvalue = self.gen(node["rvalue"])
 
-        self.emmit(f"LD {lvalue} {rvalue}")
+        self.emit(f"LD {lvalue} {rvalue}")
 
     def gen_BinaryOp(self,node):
-        pass
+        t1 = self.gen(node["lvalue"])
+        t2 = self.gen(node["rvalue"])
 
+        t = self.temp.new()
+        op = {
+            "+": "ADD",
+            "-": "SUB",
+            "*": "MULT",
+            "/": "DIV"
+        }[node["op"]]
 
-
-        
+        self.emit(f"{op} {t} {t1} {t2}")
+        return t
     
+    def gen_Return(self,node):
+        self.emit(f"RET {self.gen(node["value"])}")
+
+    def gen_If(self,node):
+        return "If"
+    
+    def gen_Logic(self,node):
+        return "Logic"
+    
+    def gen_Call(self,node):
+        return "Call"
+    
+    def gen_Print(self,node):
+        return "Print"
+    
+    def gen_While(self,node):
+        return "While"
