@@ -144,6 +144,4 @@ def ret():
     pass
 
 if __name__ == '__main__':
-    process = 1
-    print(process)
     process()
