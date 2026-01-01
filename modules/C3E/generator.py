@@ -168,8 +168,6 @@ class C3EGenerator:
     def gen_Print(self,node):
         value = self.gen(node["value"])
         # Strings são literal entre '
-        if value[0] == "'":
-            value = f'"{value[1:-1]}"'     # Coloca o valor da string entre "
         self.emit(f"PRINT {value}")
     
     def gen_Break(self,node):
