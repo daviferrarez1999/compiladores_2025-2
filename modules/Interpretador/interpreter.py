@@ -155,37 +155,6 @@ def LOAD():
     set_value(a, val)
     PC += 1
 
-def ADD():
-    global PC
-    a, b, c = get_addresses()
-    val = to_value(b) + to_value(c)
-    set_value(a, val)
-    PC += 1
-
-def SUB():
-    global PC
-    a, b, c = get_addresses()
-    val = to_value(b) - to_value(c)
-    set_value(a, val)
-    PC += 1
-
-def MULT():
-    global PC
-    a, b, c = get_addresses()
-    val = to_value(b) * to_value(c)
-    set_value(a, val)
-    PC += 1
-
-def DIV():
-    global PC
-    a, b, c = get_addresses()
-    try:
-        val = to_value(b) / to_value(c)
-    except ZeroDivisionError:
-        val = 0
-    set_value(a, val)
-    PC += 1
-
 def LABEL():
     global PC
     PC += 1
@@ -194,57 +163,6 @@ def JUMP():
     global PC
     label = get_addresses()[0]
     PC = LABELS[label]
-
-def BEQ():
-    global PC
-    a,b,label = get_addresses()
-
-    if to_value(a) == to_value(b):
-        PC = LABELS[label]
-    else:
-        PC += 1
-
-def BNE():
-    global PC
-    a,b,label = get_addresses()
-
-    if to_value(a) != to_value(b):
-        PC = LABELS[label]
-    else:
-        PC += 1
-
-def BGT():
-    global PC
-    a,b,label = get_addresses()
-
-    if to_value(a) > to_value(b):
-        PC = LABELS[label]
-    else:
-        PC += 1
-
-def BGE():
-    global PC
-    a,b,label = get_addresses()
-    if to_value(a) >= to_value(b):
-        PC = LABELS[label]
-    else:
-        PC += 1
-
-def BLT():
-    global PC
-    a,b,label = get_addresses()
-    if to_value(a) < to_value(b):
-        PC = LABELS[label]
-    else:
-        PC += 1
-
-def BLE():
-    global PC
-    a,b,label = get_addresses()
-    if to_value(a) <= to_value(b):
-        PC = LABELS[label]
-    else:
-        PC += 1
 
 def PARAM():
     global PC, PARAMETERS
@@ -274,6 +192,90 @@ def CALL():
     
     STACK.append(Frame(PC+1, params))
     PC = LABELS.get(a, None)
+
+def IF():
+    global PC
+    cond,label = get_addresses()
+    if to_value(cond) != 0:
+        PC = LABELS[label]
+    else:
+        PC += 1
+
+def ADD():
+    BinaryOp('+')
+
+def SUB():
+    BinaryOp('-')
+
+def MULT():
+    BinaryOp('*')
+
+def DIV():
+    BinaryOp('/')
+
+def EQ():
+    return BinaryOp('==')
+
+def NE():
+    return BinaryOp('!=')
+
+def GT():
+    return BinaryOp('>')
+
+def LT():
+    return BinaryOp('<')
+
+def GE():
+    return BinaryOp('>=')
+
+def LE():
+    return BinaryOp('<=')
+
+def OR():
+    return BinaryOp('||')
+
+def AND():
+    return BinaryOp('&&')
+
+def BinaryOp(op):
+    global PC
+
+    a, b, c = get_addresses()
+    b = to_value(b)
+    c = to_value(c)
+
+    if op == '+':
+        value = b + c
+    elif op == '-':
+        value = b - c
+    elif op == '*':
+        value = b * c
+    elif op == '/':
+        try:
+            value = b / c
+        except ZeroDivisionError:
+            value = 0
+    elif op == '==':
+        value = int(b == c)
+    elif op == '!=':
+        value = int(b != c)
+    elif op == '>':
+        value = int(b > c)
+    elif op == '<':
+        value = int(b < c)
+    elif op == '>=':
+        value = int(b >= c)
+    elif op == '<=':
+        value = int(b <= c)
+    elif op == '||':
+        value = int(b == 1 or c == 1)
+    elif op == '&&':
+        value = int(b == 1 and c == 1)
+    else:
+        raise ValueError(f'Operador binário desconhecido: {op}')
+
+    set_value(a, value)
+    PC += 1
 
 def RETURN():
     global PC, STACK, GLOBALS
@@ -327,12 +329,15 @@ def main():
         'DIV': DIV,
         'LABEL': LABEL,
         'J': JUMP,
-        'BEQ': BEQ,
-        'BNE': BNE,
-        'BGT': BGT,
-        'BGE': BGE, 
-        'BLT': BLT,
-        'BLE': BLE,
+        'EQ' : EQ,
+        'NE' : NE,
+        'GT' : GT,
+        'LT' : LT,
+        'GE' : GE,
+        'LE' : LE,
+        'OR' : OR,
+        'AND': AND,
+        'IF' : IF,
         'PARAM': PARAM,
         'CALL': CALL,
         'RET': RETURN,
