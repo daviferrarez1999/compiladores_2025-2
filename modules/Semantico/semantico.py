@@ -11,8 +11,8 @@ STACK = [Frame()]
 LEVEL_IF = -1
 
 def current_frame() -> Frame:
-    global STACK, GLOBAL
-    return STACK[GLOBAL] if len(STACK) else None
+    global STACK
+    return STACK[-1] if len(STACK) else None
 
 def get_var(id):
     global STACK
