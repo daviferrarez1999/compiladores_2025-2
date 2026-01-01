@@ -20,14 +20,6 @@ class C3EGenerator:
         for c in self.code:
             print(c)
 
-    def is_number(self,val):
-        if not isinstance(val, str): return val
-        if '.' in val:
-            try: return float(val)
-            except ValueError: return None
-        try: return int(val)
-        except ValueError: return None
-
     def generate_code(self):
         code = []
         try:
@@ -169,9 +161,9 @@ class C3EGenerator:
 
     def gen_Print(self,node):
         value = self.gen(node["value"])
-        # Verifica se value é uma string com espaços
-        if not self.is_number(value) and ' ' in value:
-            value = f'"{value}"'
+        # Strings são literal entre '
+        if value[0] == "'":
+            value = f'"{value[1:-1]}"'     # Coloca o valor da string entre "
         self.emit(f"PRINT {value}")
     
     def gen_Break(self,node):

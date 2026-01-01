@@ -231,7 +231,7 @@
 
                 {
                     "type": "Print",
-                    "value": { "type": "Literal", "value": "Terminando Programa" }
+                    "value": { "type": "Literal", "value": "'Terminando Programa'" }
                 },
 
                 {
