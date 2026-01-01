@@ -46,16 +46,16 @@
                 {
                     "type":"If",
                     "condition": {
-                        "type": "Logic",
+                        "type": "BinaryOp",
                         "op": "||",
                         "lvalue": {
-                            "type": "Logic",
+                            "type": "BinaryOp",
                             "op": "==",
                             "lvalue": { "type": "Identifier", "name": "k" },
                             "rvalue": { "type": "Literal", "value": 0 }
                         },
                         "rvalue": {
-                            "type": "Logic",
+                            "type": "BinaryOp",
                             "op": "==",
                             "lvalue": { "type": "Identifier", "name": "k" },
                             "rvalue": { "type": "Literal", "value": 1 }
@@ -71,7 +71,7 @@
                         {
                             "type":"If",
                             "condition": {
-                                "type": "Logic",
+                                "type": "BinaryOp",
                                 "op": "==",
                                 "lvalue": { 
                                     "type": "ArrayAccess", 
@@ -237,7 +237,7 @@
                 {
                     "type":"While",
                     "condition": {
-                     "type": "Logic",
+                     "type": "BinaryOp",
                         "op": "<=",
                         "lvalue": { "type": "Identifier", "name": "i" },
                         "rvalue": { "type": "Literal", "value": 10 }
@@ -248,7 +248,7 @@
                         {
                             "type":"If",
                             "condition": {
-                                "type": "Logic",
+                                "type": "BinaryOp",
                                 "op": "!=",
                                 "lvalue": { "type": "Identifier", "name": "i" },
                                 "rvalue": { "type": "Literal", "value": 9 }

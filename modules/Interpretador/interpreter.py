@@ -300,8 +300,8 @@ def READLN():
     addresses = get_addresses()
     a = addresses[0]
     b = input()
-    
-    val = is_number(b) if is_number(b) is not None else b
+    is_number
+    val = (b) if is_number(b) is not None else b
     set_value(a, val)
     PC += 1
 
