@@ -44,12 +44,18 @@ class C3EGenerator:
 
         self.emit(f"LD {id} {self.default_value[varType]}")
 
+        if varType == 'bool':
+            self.emit(f"DFB {id}")
+
     def gen_ArrayDecl(self,node):
         varType = node["varType"]
         id = node["id"]
         size = node["size"]
 
         self.emit(f"ALLOC {id} {size} {self.default_value[varType]}")
+
+        if varType == 'bool':
+            self.emit(f"DFB {id}")
 
     def gen_FunctionDecl(self,node):
         self.emit("")   # Espaçamento
