@@ -119,7 +119,7 @@ class C3EGenerator:
 
             # Relacionais
             "==": "EQ",
-            "!=": "NEQ",
+            "!=": "NE",
             "<":  "LT",
             "<=": "LE",
             ">":  "GT",
@@ -170,7 +170,7 @@ class C3EGenerator:
     def gen_Print(self,node):
         value = self.gen(node["value"])
         # Verifica se value é uma string com espaços
-        if not self.is_number(value):
+        if not self.is_number(value) and ' ' in value:
             value = f'"{value}"'
         self.emit(f"PRINT {value}")
     
