@@ -10,7 +10,7 @@
         },
         {
             "type": "FunctionDecl",
-            "id": "multiplica",
+            "id": "multiplica", 
             "returnType": "float",
             "params": [
                 { "type": "Param", "varType": "float", "id": "a" },
@@ -219,6 +219,34 @@
                         "id": "fib",
                         "args": [{ "type": "Identifier", "name": "num" }]
                     }
+                },
+
+                { 
+                    "type": "Print", 
+                    "value": { "type": "Literal", "value": "'Fib de 20:'" } 
+                },
+
+                { "type": "VarDecl", "varType": "bool", "id": "t"},
+
+                {
+                    "type": "Assign",
+                    "lvalue": { "type": "Identifier", "name": "t" },
+                    "rvalue": {
+                        "type": "BinaryOp",
+                        "op": "+",
+                        "lvalue": { "type": "Identifier", "name": "t" },
+                        "rvalue": { "type": "Identifier", "name": "num" }
+                    }
+                },
+
+                { 
+                    "type": "Print", 
+                    "value": { "type": "Literal", "value": "'Bool t += num:'" } 
+                },
+
+                { 
+                    "type": "Print", 
+                    "value": { "type": "Identifier", "name": "t" } 
                 },
 
                 { "type": "VarDecl", "varType": "int", "id": "i" },

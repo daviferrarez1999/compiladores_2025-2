@@ -42,7 +42,7 @@ class C3EGenerator:
         varType = node["varType"]
         id = node["id"]
 
-        self.emit(f"LD {id} {self.default_value[varType]}")
+        self.emit(f"DECL {id} {self.default_value[varType]}")
 
         if varType == 'bool':
             self.emit(f"DFB {id}")

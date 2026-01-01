@@ -172,7 +172,7 @@
                 },
                 {
                     "type": "Assign",
-                    "lvalue": { "type": "Identifier", "name": "c" },
+                    "lvalue": { "type": "Identifier", "name": "b" },
                     "rvalue": {
                         "type": "BinaryOp",
                         "op": "*",
@@ -226,7 +226,7 @@
 
                 {
                     "type": "Print",
-                    "value": { "type": "Literal", "value": "Terminando Programa" }
+                    "value": { "type": "Literal", "value": "'Terminando Programa'" }
                 },
 
                 {
