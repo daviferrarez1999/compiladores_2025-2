@@ -21,11 +21,14 @@ def read_code(dir):
         if not line:
             code.append([''])
             continue
-            
+
         parts = shlex.split(line)
         if not parts:
             code.append([''])
             continue
+
+        if '\"' in line:
+            parts[1] = f'"{parts[1]}"'
 
         code.append(parts)
         
@@ -293,7 +296,10 @@ def RETURN():
 def PRINT():
     global PC
     a = get_addresses()[0]
-    print(to_value(a))
+    text = str(to_value(a))
+    if text[0] == '"':
+        text = text[1:-1]
+    print(text)
 
     PC += 1
 
@@ -318,6 +324,11 @@ def ALLOC():
 
     set_value(a, arr)
     PC += 1
+
+def DFB():
+    global PC, GLOBALS, STACK
+    a = get_addresses()
+    
 
 def main():
     HANDLER = {
