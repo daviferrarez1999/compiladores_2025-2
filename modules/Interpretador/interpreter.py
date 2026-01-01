@@ -1,4 +1,4 @@
-from frame import Frame
+from modules.Interpretador.frame import Frame
 import sys
 import shlex
 
