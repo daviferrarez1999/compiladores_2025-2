@@ -29,7 +29,6 @@ class C3EGenerator:
         except ValueError: return None
 
     def generate_code(self):
-        '''
         code = []
         try:
             for decl in self.asa["Program"]:
@@ -38,12 +37,7 @@ class C3EGenerator:
         except Exception as e:
             print(f"Erro:{e}")
         finally:
-            self.print_code()
             return code
-        '''
-        for decl in self.asa["Program"]:
-                self.gen(decl)
-        self.print_code()
 
     def gen(self,node):
         method = f"gen_{node['type']}"

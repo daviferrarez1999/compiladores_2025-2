@@ -7,6 +7,9 @@ def main(filedir):
 
     generator = C3EGenerator(asa)
     code = generator.generate_code()
+    with open('tmp/c3e/saida.txt','w') as f:
+        for line in code:
+            f.write(line + '\n')
 
 if __name__ == '__main__':
     main(filedir='modules/C3E/asa.json')
