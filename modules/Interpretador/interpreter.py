@@ -27,8 +27,8 @@ def read_code(dir):
             code.append([''])
             continue
 
-        if '\"' in line:
-            parts[1] = f'"{parts[1]}"'
+        if '\'' in line:
+            parts[1] = f'\'{parts[1]}\''
 
         code.append(parts)
         
@@ -102,8 +102,9 @@ def set_value(id, val):
     def get_type_name(v):
         if isinstance(v, float): return 'float'
         if isinstance(v, int): return 'int'
-        if isinstance(v, list): return 'array'
-        return 'char'
+        if isinstance(v, str): return 'char'
+        if isinstance(v, list): return get_type_name(v[0])
+        return None
 
     # Helper para realizar o casting e manter o dicionário
     def prepare_storage(old_data, new_val):
@@ -116,11 +117,12 @@ def set_value(id, val):
         try:
             if t == 'float': final_val = float(new_val)
             elif t == 'int': final_val = int(new_val)
+            elif t == 'bool': final_val = bool(new_val)
             elif t == 'char': final_val = chr(new_val)
             else: final_val = new_val
         except:
             final_val = new_val
-            
+        
         return {'value': final_val, 'type': t}
 
     if '$' not in id:
@@ -149,7 +151,7 @@ def set_value(id, val):
         
         if target_array is not None:
             # Assume-se que o array guarda dicionários em cada posição
-            target_array[pos_idx] = prepare_storage(target_array[pos_idx], val)
+            target_array[pos_idx] = val
 
 def LOAD():
     global PC
@@ -297,7 +299,7 @@ def PRINT():
     global PC
     a = get_addresses()[0]
     text = str(to_value(a))
-    if text[0] == '"':
+    if text[0] == '\'':
         text = text[1:-1]
     print(text)
 
@@ -318,18 +320,27 @@ def ALLOC():
 
     size = int(to_value(b))
     initial_val = to_value(c)
-    type_name = 'float' if isinstance(initial_val, float) else 'int'
-    
-    arr = [{'value': initial_val, 'type': type_name} for _ in range(size)]
+
+    arr = [initial_val]*size
 
     set_value(a, arr)
     PC += 1
 
 def DFB():
     global PC, GLOBALS, STACK
-    a = get_addresses()
-    
+    id = get_addresses()[0]
 
+    if id in GLOBALS:
+        GLOBALS[id]['type'] = 'bool'
+    else:
+        frame = current_frame()
+        if frame:
+            frame.variables[id]['type'] = 'bool'
+        else:
+            GLOBALS[id]['type'] = 'bool'
+
+    PC += 1
+    
 def main():
     HANDLER = {
         'LD': LOAD,
@@ -354,6 +365,7 @@ def main():
         'PRINT': PRINT,
         'READLN': READLN,
         'ALLOC': ALLOC,
+        'DFB': DFB,
         '': None
     }
     args = sys.argv
