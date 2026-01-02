@@ -6,9 +6,13 @@ class SemanticAnalyzer():
         self.table = SymbolTable()
         self.errors = []
 
-    def analyze(self):
+    def analyzeAsa(self):
         self.get_global_scope()
         self.analyze_functions()
+
+    def analyze(self,node):
+        method = f"analyze_{node['type']}"
+        return getattr(self,method)(node)
 
     def get_global_scope(self):
         for decl in self.asa["Program"]:

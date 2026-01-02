@@ -6,7 +6,7 @@ def main(filedir):
         asa = json.load(file)
 
     analyzer = SemanticAnalyzer(asa)
-    analyzer.analyze()
+    analyzer.analyzeAsa()
     analyzer.print_erros()
 
 if __name__ == '__main__':
