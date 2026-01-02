@@ -51,6 +51,13 @@ def get_addresses():
     addresses = CODE[PC][1:] # Retorna tudo menos o tipo da instrução
     return addresses
 
+def get_type_name(v):
+    if isinstance(v, int): return 'int'
+    if isinstance(v, float): return 'float'
+    if isinstance(v, str): return 'char'
+    if isinstance(v, list): return get_type_name(v[0])
+    return None
+
 def is_number(val):
     if not isinstance(val, str): return val
     if '.' in val:
@@ -97,14 +104,6 @@ def to_value(id):
 
 def set_value(id, val):
     global GLOBALS, STACK
-    
-    # Helper para definir o nome do tipo
-    def get_type_name(v):
-        if isinstance(v, float): return 'float'
-        if isinstance(v, int): return 'int'
-        if isinstance(v, str): return 'char'
-        if isinstance(v, list): return get_type_name(v[0])
-        return None
 
     # Helper para realizar o casting e manter o dicionário
     def prepare_storage(old_data, new_val):
@@ -316,14 +315,25 @@ def READLN():
 
 def ALLOC():
     global PC, GLOBALS, STACK
-    a, b, c = get_addresses()
+    id, b, c = get_addresses()
 
     size = int(to_value(b))
     initial_val = to_value(c)
 
     arr = [initial_val]*size
+    
+    if id in GLOBALS:
+        GLOBALS[id] = {'value': arr, 'type': get_type_name(arr)}
+    else:
+        frame = current_frame()
+        if frame:
+            if id not in frame.variables:
+                frame.new_var(id)
+            data = {'value': arr, 'type': get_type_name(arr)}
+            frame.set_var(id, data)
+        else:
+            GLOBALS[id] = {'value': arr, 'type': get_type_name(arr)}
 
-    set_value(a, arr)
     PC += 1
 
 def DFB():
@@ -338,6 +348,26 @@ def DFB():
             frame.variables[id]['type'] = 'bool'
         else:
             GLOBALS[id]['type'] = 'bool'
+
+    PC += 1
+
+def DECL():
+    global PC
+
+    id, val = get_addresses()
+    val = to_value(val)
+    
+    if id in GLOBALS:
+        GLOBALS[id] = {'value': val, 'type': get_type_name(val)}
+    else:
+        frame = current_frame()
+        if frame:
+            if id not in frame.variables:
+                frame.new_var(id)
+            data = {'value': val, 'type': get_type_name(val)}
+            frame.set_var(id, data)
+        else:
+            GLOBALS[id] = {'value': val, 'type': get_type_name(val)}
 
     PC += 1
     
@@ -366,6 +396,7 @@ def main():
         'READLN': READLN,
         'ALLOC': ALLOC,
         'DFB': DFB,
+        'DECL': DECL,
         '': None
     }
     args = sys.argv

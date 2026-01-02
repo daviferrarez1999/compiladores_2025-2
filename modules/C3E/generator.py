@@ -67,7 +67,7 @@ class C3EGenerator:
         self.emit(f'LABEL {id}')
 
         for i,p in enumerate(node["params"]):
-            self.emit(f"LD {p["id"]} a{i}")
+            self.emit(f"DECL {p["id"]} a{i}")
 
         for stmt in body:
             self.gen(stmt)
