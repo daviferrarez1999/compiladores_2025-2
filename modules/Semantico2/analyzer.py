@@ -56,7 +56,7 @@ class SemanticAnalyzer():
         array = node["array"]
         res = self.table.lookup(array)
         if not res:
-            self.errors.append(f"array {id} não declarado.")
+            self.errors.append(f"array {array} não declarado.")
             return None
         index = res["index"]
         return self.analyze(index)
