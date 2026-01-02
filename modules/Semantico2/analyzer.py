@@ -66,7 +66,9 @@ class SemanticAnalyzer():
         if res["sym_type"] != 'var':
             self.errors.append(f"id {id} não é uma variável.")
             return None
-        return res["data_type"]
+        if res["data_type"] in ['int','float','bool']:
+            return 'number'
+        return 'char'
 
     def analyze_ArrayAccess(self,node):
         array = node["array"]
