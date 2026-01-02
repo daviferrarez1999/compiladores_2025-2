@@ -39,4 +39,10 @@ class SemanticAnalyzer():
 
         for stmt in decl["body"]:
             pass
+
+    def analyze_identifier(self,node):
+        pass
+
+    def analyze_array_access(self,node):
+        pass
         
