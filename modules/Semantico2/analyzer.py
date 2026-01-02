@@ -84,18 +84,20 @@ class SemanticAnalyzer():
         rvalue = self.analyze(node["rvalue"])
         lvalue = self.analyze(node["lvalue"])
 
-        if lvalue in ("string","char",False,None) or rvalue in ("string","char",False,None):
+        if lvalue in ("string","char",None) or rvalue in ("string","char",None):
             self.errors(f"Operação Inválida com {rvalue} {node["op"]} {lvalue}.")
-            return False
-        return True
+            return None
+        return "number"
     
     def analyze_UnaryOp(self,node):
         id = node["id"]
         if id["type"] == "Literal":
             self.errors.append(f"Operação {node["op"]} inválida para {id["value"]}.")
+            return None
         elif self.analyze(id) is None:
             self.errors.append(f"Operação {node["op"]} inválida para {id["name"]}.")
-        return True
+            return None
+        return "number"
     
     def analyze_Literal(self,node):
         str = str(node["value"])
@@ -103,4 +105,4 @@ class SemanticAnalyzer():
             if len(str) > 3:
                 return "string"
             return "char"
-        return True
+        return "number"
