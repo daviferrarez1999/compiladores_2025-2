@@ -41,14 +41,59 @@ class SemanticAnalyzer():
                 self.analyze_body(decl)
                 self.table.exit_scope()
 
+    def analyze_Call(self,node):
+        id = node["id"]
+        std = f"em Call {id}"
+        res = self.table.lookup(id)
+        if not res:
+            self.errors.append(f"id {id} não declarado {std}.")
+            return None
+        if res["sym_type"] != 'func':
+            self.errors.append(f"id {id} não é uma função {std}.")
+            return None
+        for i, arg in enumerate(node["args"]):
+            paramType = self.analyze(arg)
+            expectedParamType = self.analyze(res["params"][i])
+            if paramType != expectedParamType:
+                self.errors.append(f"parâmetro de tipo {paramType} diferente do tipo esperado {expectedParamType} {std}.")
+            return None
+        if res["returnType"] in ['int','float','bool']:
+            return 'number'
+        return 'char'
+
     def analyze_Return(self,node):
         global expectedType
         value = node["value"]
         returnType = self.analyze(value)
         if expectedType != returnType:
-            self.errors.append(f"return de tipo {returnType} diferente do tipo esperado {expectedType}.")
+            self.errors.append(f"returno de tipo {returnType} diferente do tipo esperado {expectedType}.")
             return None
         return returnType
+
+    def analyze_If(self,node):
+        if not self.analyze(node["condition"]):
+            self.errors.append(f"Condição inválida.")
+            return None
+        
+        self.table.enter_scope()
+        for stmt in node["then"]:
+            self.analyze(stmt)
+        self.table.exit_scope()
+
+        self.table.enter_scope()
+        for stmt in node["else"]:
+            self.analyze(stmt)
+        self.table.enter_scope()
+
+    def analyze_While(self,node):
+        if not self.analyze(node["condition"]):
+            self.errors.append(f"Condição inválida.")
+            return None
+        
+        self.table.enter_scope()
+        for stmt in node["body"]:
+            self.analyze(stmt)
+        self.table.exit_scope()
     
     def analyze_Body(self,decl):
         global expectedType
