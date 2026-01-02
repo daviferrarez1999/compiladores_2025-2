@@ -50,7 +50,7 @@ class SemanticAnalyzer():
         returnType = decl["returnType"]
 
         for stmt in decl["body"]:
-            pass
+            self.analyze(stmt)
 
     def analyze_Identifier(self,node):
         id = node["name"]
@@ -79,7 +79,8 @@ class SemanticAnalyzer():
         rvalue = self.analyze(node["rvalue"])
         lvalue = self.analyze(node["lvalue"])
 
-        if "string" in (lvalue,rvalue) or False in (lvalue,rvalue):
+        if lvalue in ("string","char",False,None) or rvalue in ("string","char",False,None):
+            self.errors(f"Operação Inválida com {rvalue} {node["op"]} {lvalue}.")
             return False
         return True
     
@@ -92,6 +93,9 @@ class SemanticAnalyzer():
         return True
     
     def analyze_Literal(self,node):
-        if str(node["value"]) == "'":
-            return "string"
+        str = str(node["value"])
+        if str == "'":
+            if len(str) > 3:
+                return "string"
+            return "char"
         return True
