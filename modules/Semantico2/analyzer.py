@@ -75,3 +75,23 @@ class SemanticAnalyzer():
         index = res["index"]
         return self.analyze(index)
         
+    def analyze_BinaryOp(self,node):
+        rvalue = self.analyze(node["rvalue"])
+        lvalue = self.analyze(node["lvalue"])
+
+        if "string" in (lvalue,rvalue) or False in (lvalue,rvalue):
+            return False
+        return True
+    
+    def analyze_UnaryOp(self,node):
+        id = node["id"]
+        if id["type"] == "Literal":
+            self.errors.append(f"Operação {node["op"]} inválida para {id["value"]}.")
+        elif self.analyze(id) is None:
+            self.errors.append(f"Operação {node["op"]} inválida para {id["name"]}.")
+        return True
+    
+    def analyze_Literal(self,node):
+        if str(node["value"]) == "'":
+            return "string"
+        return True
