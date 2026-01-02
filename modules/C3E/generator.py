@@ -95,6 +95,32 @@ class C3EGenerator:
         else:
             self.emit(f"LD {lvalue} {rvalue}")
 
+    def gen_UnaryOp(self,node):
+        op = node["op"]
+        id = node["id"]["name"]
+        start_neg = self.label.new('NEG')
+        end_neg = self.label.new('ENDNEG')
+
+        if op == "!":
+            t = self.temp.new()
+            self.emit(f"EQ {t} {id} 0")
+            self.emit(f"IF {t} {start_neg}")
+            self.emit(f"LD {id} 0")
+            self.emit(f"J {end_neg}")
+            self.emit(f"LABEL {start_neg}")
+            self.emit(f"LD {id} 1")
+            self.emit(f"LABEL {end_neg}")
+
+            return id
+
+        if op == "++":
+            op = "ADD"
+        elif op == "--":
+            op = "SUB"
+
+        self.emit(f"{op} {id} {id} 1")
+        return id
+
     def gen_BinaryOp(self,node):
         # Se um valor for um call, então é preciso pegar o valor no ra
         t1 = self.gen(node["lvalue"])

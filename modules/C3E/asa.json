@@ -283,14 +283,9 @@
                             },
                             "then": [
                                 {
-                                    "type": "Assign",
-                                    "lvalue": { "type": "Identifier", "name": "i" },
-                                    "rvalue": {
-                                        "type": "BinaryOp",
-                                        "op": "+",
-                                        "lvalue": { "type": "Identifier", "name": "i" },
-                                        "rvalue": { "type": "Literal", "value": 1 }
-                                    }
+                                    "type": "UnaryOp",
+                                    "op": "++",
+                                    "id": { "type": "Identifier", "name": "i" }
                                 }
                             ],
                             "else": [
