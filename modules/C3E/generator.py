@@ -81,7 +81,7 @@ class C3EGenerator:
 
     def gen_ArrayAccess(self,node):
         index = self.gen(node["index"])
-        return f"{node["array"]}${index}"
+        return f"{node["array"]}.{index}"
     
     def gen_Literal(self,node):
         return node["value"]

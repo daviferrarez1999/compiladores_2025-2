@@ -72,8 +72,8 @@ def to_value(id):
     val = is_number(id)
     if val is not None: return val
     
-    if '$' in id:
-        name, pos = id.split('$')
+    if '.' in id:
+        name, pos = id.split('.')
         pos_val = int(to_value(pos))
         
         target = GLOBALS.get(name)
@@ -124,7 +124,7 @@ def set_value(id, val):
         
         return {'value': final_val, 'type': t}
 
-    if '$' not in id:
+    if '.' not in id:
         if id in GLOBALS:
             GLOBALS[id] = prepare_storage(GLOBALS[id], val)
         else:
@@ -139,7 +139,7 @@ def set_value(id, val):
                 GLOBALS[id] = prepare_storage(None, val)
     else:
         # Para Arrays
-        name, pos = id.split('$')
+        name, pos = id.split('.')
         pos_idx = int(to_value(pos))
         
         target_array = GLOBALS.get(name)

@@ -4,4 +4,4 @@ class TempGen:
 
     def new(self):
         self.count += 1
-        return f"*t{self.count}"
+        return f"$t{self.count}"
