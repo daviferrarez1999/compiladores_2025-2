@@ -40,9 +40,22 @@ class SemanticAnalyzer():
         for stmt in decl["body"]:
             pass
 
-    def analyze_identifier(self,node):
-        pass
+    def analyze_Identifier(self,node):
+        id = node["name"]
+        res = self.table.lookup(id)
+        if not res:
+            self.errors.append(f"id {id} não declarado.")
+            return None
+        return res["data_type"]
 
-    def analyze_array_access(self,node):
+    def analyze_ArrayAccess(self,node):
+        array = node["array"]
+        res = self.table.lookup(array)
+        if not res:
+            self.errors.append(f"array {id} não declarado.")
+            return None
+        index = res["index"]
+        if index["type"] == "Identifier":
+            return self.analyze_identifier(index)
         pass
         
