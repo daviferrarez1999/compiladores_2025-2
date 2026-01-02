@@ -1,7 +1,7 @@
 from .symbol_table import SymbolTable
 
-global returnType
-returnType = None
+global expectedType
+expectedType = None
 
 class SemanticAnalyzer():
     def __init__(self,asa):
@@ -42,12 +42,17 @@ class SemanticAnalyzer():
                 self.table.exit_scope()
 
     def analyze_Return(self,node):
+        global expectedType
         value = node["value"]
-        expected_type = self.analyze(value)
+        returnType = self.analyze(value)
+        if expectedType != returnType:
+            self.errors.append(f"return de tipo {returnType} diferente do tipo esperado {expectedType}.")
+            return None
+        return returnType
     
     def analyze_Body(self,decl):
-        global returnType
-        returnType = decl["returnType"]
+        global expectedType
+        expectedType = decl["returnType"]
 
         for stmt in decl["body"]:
             self.analyze(stmt)
