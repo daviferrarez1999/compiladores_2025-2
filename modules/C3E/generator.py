@@ -97,7 +97,8 @@ class C3EGenerator:
 
     def gen_UnaryOp(self,node):
         op = node["op"]
-        id = node["id"]["name"]
+        id = self.gen(node["id"])
+
         start_neg = self.label.new('NEG')
         end_neg = self.label.new('ENDNEG')
 
