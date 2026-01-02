@@ -59,7 +59,5 @@ class SemanticAnalyzer():
             self.errors.append(f"array {id} não declarado.")
             return None
         index = res["index"]
-        if index["type"] == "Identifier":
-            return self.analyze_identifier(index)
-        pass
+        return self.analyze(index)
         
