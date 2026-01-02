@@ -1,5 +1,8 @@
 from .symbol_table import SymbolTable
 
+global returnType
+returnType = None
+
 class SemanticAnalyzer():
     def __init__(self,asa):
         self.asa = asa
@@ -37,8 +40,13 @@ class SemanticAnalyzer():
                 
                 self.analyze_body(decl)
                 self.table.exit_scope()
+
+    def analyze_Return(self,node):
+        value = node["value"]
+        expected_type = self.analyze(value)
     
-    def analyze_body(self,decl):
+    def analyze_Body(self,decl):
+        global returnType
         returnType = decl["returnType"]
 
         for stmt in decl["body"]:
@@ -50,13 +58,19 @@ class SemanticAnalyzer():
         if not res:
             self.errors.append(f"id {id} não declarado.")
             return None
+        if res["sym_type"] != 'var':
+            self.errors.append(f"id {id} não é uma variável.")
+            return None
         return res["data_type"]
 
     def analyze_ArrayAccess(self,node):
         array = node["array"]
         res = self.table.lookup(array)
         if not res:
-            self.errors.append(f"array {array} não declarado.")
+            self.errors.append(f"id {array} não declarado.")
+            return None
+        if res["sym_type"] != 'array':
+            self.errors.append(f"id {array} não é um array.")
             return None
         index = res["index"]
         return self.analyze(index)
