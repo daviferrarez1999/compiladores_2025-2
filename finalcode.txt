@@ -120,9 +120,9 @@ int main() {
     print(ok);
 
     if (ok) {
-        print("Condicao logica satisfeita\n");
+        print(" -> Condicao logica satisfeita\n");
     } else {
-        print("Condicao logica falhou\n");
+        print(" -> Condicao logica falhou\n");
     }
 
 

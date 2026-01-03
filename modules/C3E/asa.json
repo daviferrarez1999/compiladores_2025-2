@@ -1054,7 +1054,7 @@
               "type": "Print",
               "value": {
                 "type": "Literal",
-                "value": "'Condicao logica satisfeita\\n'"
+                "value": "' -> Condicao logica satisfeita\\n'"
               }
             }
           ],
@@ -1063,7 +1063,7 @@
               "type": "Print",
               "value": {
                 "type": "Literal",
-                "value": "'Condicao logica falhou\\n'"
+                "value": "' -> Condicao logica falhou\\n'"
               }
             }
           ]
