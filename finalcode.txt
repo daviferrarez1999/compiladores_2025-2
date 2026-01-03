@@ -96,7 +96,7 @@ int main() {
 
     while (i < limit) {
         f[i] = 0;
-        i = i + 1;
+        i++;
     }
 
     print("Sequencia de Fibonacci:\n");
