@@ -12,7 +12,7 @@ class C3EGenerator:
             "int": 0,
             "bool": 0,
             "float": 0.0,
-            "char": ' '
+            "char": "' '"
         }
 
     def print_code(self):

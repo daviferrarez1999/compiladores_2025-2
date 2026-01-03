@@ -1069,6 +1069,36 @@
           ]
         },
         {
+          "type": "VarDecl",
+          "varType": "char",
+          "id": "c"
+        },
+        {
+          "type": "Assign",
+          "lvalue": {
+            "type": "Identifier",
+            "name": "c"
+          },
+          "rvalue": {
+            "type": "Literal",
+            "value": "'m'"
+          }
+        },
+        {
+          "type": "Print",
+          "value": {
+            "type": "Identifier",
+            "name": "c"
+          }
+        },
+        {
+          "type": "Print",
+          "value": {
+            "type": "Literal",
+            "value": "'\\n'"
+          }
+        },
+        {
           "type": "Return",
           "value": {
             "type": "Literal",
