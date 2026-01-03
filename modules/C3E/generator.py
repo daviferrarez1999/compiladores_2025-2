@@ -95,6 +95,9 @@ class C3EGenerator:
         else:
             self.emit(f"LD {lvalue} {rvalue}")
 
+    def gen_Parenthesis(self,node):
+        self.gen(node["value"])
+
     def gen_UnaryOp(self,node):
         op = node["op"]
         id = self.gen(node["id"])
@@ -141,6 +144,7 @@ class C3EGenerator:
             "-":  "SUB",
             "*":  "MULT",
             "/":  "DIV",
+            "%": "MOD",
 
             # Relacionais
             "==": "EQ",

@@ -217,6 +217,9 @@ def MULT():
 def DIV():
     BinaryOp('/')
 
+def MOD():
+    BinaryOp('%')
+
 def EQ():
     return BinaryOp('==')
 
@@ -259,6 +262,8 @@ def BinaryOp(op):
             value = b / c
         except ZeroDivisionError:
             value = 0
+    elif op == '%':
+        value = int(b % c)
     elif op == '==':
         value = int(b == c)
     elif op == '!=':
@@ -300,7 +305,7 @@ def PRINT():
     text = str(to_value(a))
     if text[0] == '\'':
         text = text[1:-1]
-    print(text)
+    print(text.replace('\\n','\n'),end='')
 
     PC += 1
 
@@ -389,6 +394,7 @@ def main():
         'OR' : OR,
         'AND': AND,
         'IF' : IF,
+        'MOD': MOD,
         'PARAM': PARAM,
         'CALL': CALL,
         'RET': RETURN,
