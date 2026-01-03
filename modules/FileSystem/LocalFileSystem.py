@@ -5,7 +5,7 @@ import os;
 ROOT_PATH = os.getcwd()
 
 class LocalFileSystem(IFileSystem):
-    def downloadFile(self, path: str):
+    def downloadFile(self, path: str, as_buffer = False):
         try: 
             pathWithFile = os.path.join(ROOT_PATH, path)
             with open(pathWithFile, 'r', encoding='utf-8') as file:
@@ -14,10 +14,7 @@ class LocalFileSystem(IFileSystem):
             print("Fail to read file or buffer.")
         
     def uploadFile(self, path: str, fileName: str, mode: Literal['wb', 'w'], data):
-        try:      
-            rootWithPath = os.path.join(ROOT_PATH, path)
-            os.makedirs(rootWithPath, exist_ok=True)
-            with open(os.path.join(rootWithPath, fileName), mode) as file:
-                file.write(data)
-        except Exception as e:
-            print("Fail to write file or buffer.")
+        rootWithPath = os.path.join(ROOT_PATH, path)
+        os.makedirs(rootWithPath, exist_ok=True)
+        with open(os.path.join(rootWithPath, fileName), mode) as file:
+            file.write(data)

@@ -3,7 +3,7 @@ from typing import Literal
 
 class IFileSystem(ABC):
         @abstractmethod
-        def downloadFile(self, path: str):
+        def downloadFile(self, path: str, as_buffer: bool):
             """
             Realiza o download um arquivo.
             Args:

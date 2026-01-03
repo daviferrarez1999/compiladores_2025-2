@@ -1,10 +1,19 @@
+import json
 from .symbol_table import SymbolTable
+from modules.FileSystem import IFileSystem
 
 global expectedType
 expectedType = None
 
 class SemanticAnalyzer():
-    def __init__(self,asa):
+    fs: IFileSystem
+
+    def __init__(self, fs):
+        self.fs = fs
+
+    def init(self, asaPath):
+        file = self.fs.downloadFile(asaPath, True)
+        asa = json.loads(file)
         self.asa = asa
         self.table = SymbolTable()
         self.errors = []
@@ -23,6 +32,9 @@ class SemanticAnalyzer():
         for decl in self.asa["Program"]:
             if not self.table.define(decl):
                 self.errors.append(f"{self.table.get_scope_name()} id {decl["id"]} já declarado.")
+
+    def has_errors(self):
+        return len(self.errors) > 0
 
     def print_erros(self):
         if len(self.errors):

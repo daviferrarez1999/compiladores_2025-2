@@ -429,5 +429,57 @@ def main():
         else:
             PC += 1
 
+def init(asaPath):
+
+    HANDLER = {
+        'LD': LOAD,
+        'ADD': ADD,
+        'SUB': SUB,
+        'MULT': MULT,
+        'DIV': DIV,
+        'LABEL': LABEL,
+        'J': JUMP,
+        'EQ' : EQ,
+        'NE' : NE,
+        'GT' : GT,
+        'LT' : LT,
+        'GE' : GE,
+        'LE' : LE,
+        'OR' : OR,
+        'AND': AND,
+        'IF' : IF,
+        'MOD': MOD,
+        'PARAM': PARAM,
+        'CALL': CALL,
+        'RET': RETURN,
+        'PRINT': PRINT,
+        'READLN': READLN,
+        'ALLOC': ALLOC,
+        'DFB': DFB,
+        'DECL': DECL,
+        '': None
+    }
+
+    global CODE, LABELS, PC
+    CODE, LABELS = read_code(asaPath)
+    PC = 0
+
+    while PC < len(CODE) and code_type(PC) != 'LABEL':
+        func = code_type(PC)
+        if func:
+            HANDLER[code_type(PC)]()
+        else:
+            PC += 1
+
+    STACK.append(Frame())
+    PC = LABELS.get('main',None)
+
+    while PC is not None and PC < len(CODE):
+        func = code_type(PC)
+        if func:
+            HANDLER[code_type(PC)]()
+        else:
+            PC += 1
+
 if __name__ == "__main__":
     main()

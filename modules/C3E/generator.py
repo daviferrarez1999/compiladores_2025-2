@@ -1,8 +1,17 @@
+import json
+import os
+from modules.FileSystem import IFileSystem
 from .label import LabelGen
 from .temp import TempGen
 
 class C3EGenerator:
-    def __init__(self,asa):
+    fs: IFileSystem
+    def __init__(self, fs):
+        self.fs = fs
+
+    def init(self,asaPath):
+        file = self.fs.downloadFile(asaPath)
+        asa = json.loads(file)
         self.asa = asa
         self.code: list[str] = []
         self.temp = TempGen()
@@ -29,6 +38,7 @@ class C3EGenerator:
         except Exception as e:
             print(f"Erro:{e}")
         finally:
+            self.fs.uploadFile(os.path.join('tmp', 'c3e'), 'c3e.txt', "w", '\n'.join(code))
             return code
 
     def gen(self,node):
