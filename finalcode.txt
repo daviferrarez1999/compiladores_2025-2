@@ -115,11 +115,16 @@ int main() {
     print(fib(limit));
     print("\n");
 
-    if (((value % 2) == 0 && (value > 10)) || !((total % 3) != 1)) {
+    bool ok;
+    ok = ((value % 2) == 0 && (value > 10)) || !((total % 3) != 1);
+    print(ok);
+
+    if (ok) {
         print("Condicao logica satisfeita\n");
     } else {
         print("Condicao logica falhou\n");
     }
+
 
     return 0;
 }
