@@ -28,7 +28,7 @@ def read_code(dir):
             continue
 
         if '\'' in line:
-            parts[1] = f'\'{parts[1]}\''
+            parts[1] = f'{parts[1]}'
 
         code.append(parts)
         
@@ -91,7 +91,6 @@ def to_value(id):
         res = GLOBALS[id]
     elif current_frame():
         res = current_frame().get_var(id)
-
     # Se encontramos um dicionário, retornamos apenas o valor bruto
     if isinstance(res, dict):
         return res['value']
@@ -303,6 +302,7 @@ def PRINT():
     global PC
     a = get_addresses()[0]
     text = str(to_value(a))
+
     if text[0] == '\'':
         text = text[1:-1]
     print(text.replace('\\n','\n'),end='')
