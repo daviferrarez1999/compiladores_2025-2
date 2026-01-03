@@ -12,10 +12,13 @@ class SymbolTable():
         self.current = self.current.parent
 
     def get_scope_name(self):
-        name = ""
         sp = self.current
+        
+        name = f"{sp.name} >"
+        sp = sp.parent
+
         while sp:
-            name = f"{sp.name} > {name} "
+            name = f"{sp.name} > {name}"
             sp = sp.parent
         return name
 

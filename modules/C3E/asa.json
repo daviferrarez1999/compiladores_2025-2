@@ -766,7 +766,7 @@
     },
     {
       "type": "FunctionDecl",
-      "id": "main",
+      "id": "main2",
       "returnType": "int",
       "params": [],
       "body": [
