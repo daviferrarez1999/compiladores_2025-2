@@ -11,6 +11,8 @@ class SemanticAnalyzer():
 
     def analyzeAsa(self):
         self.get_global_scope()
+        if "main" not in self.table.current.symbols:
+            self.errors.append(f"{self.table.get_scope_name()} main não declarada.")
         self.analyze_functions()
 
     def analyze(self,node):
