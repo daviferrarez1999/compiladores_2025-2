@@ -24,7 +24,7 @@ class SemanticAnalyzer():
             self.errors.append(f"{self.table.get_scope_name()} main não declarada.")
         self.analyze_functions()
 
-    def analyze(self,node):
+    def analyze(self, node):
         method = f"analyze_{node['type']}"
         return getattr(self,method)(node)
 
@@ -53,12 +53,14 @@ class SemanticAnalyzer():
                         self.errors.append(f"{self.table.get_scope_name()} id {p["id"]} já declarado antes de {decl["id"]}.")
                 
                 self.analyze_Body(decl)
-                self.table.exit_scope()
+                unnused_variables = self.table.exit_scope()
+                for variable in unnused_variables:
+                    self.errors.append(f"{self.table.get_scope_name()} Variável não foi utilizada '{variable.name}'.")
 
     def analyze_Call(self,node):
         id = node["id"]
         std = f"em Call {id}"
-        res = self.table.lookup(id)
+        res = self.table.lookup(id, True)
         if not res:
             self.errors.append(f"{self.table.get_scope_name()} id {id} não declarado {std}.")
             return None
@@ -132,7 +134,7 @@ class SemanticAnalyzer():
 
     def analyze_Identifier(self,node):
         id = node["name"]
-        res = self.table.lookup(id)
+        res = self.table.lookup(id, True)
         if not res:
             self.errors.append(f"{self.table.get_scope_name()} id {id} não declarado.")
             return None
@@ -145,15 +147,25 @@ class SemanticAnalyzer():
 
     def analyze_ArrayAccess(self,node):
         array = node["array"]
-        res = self.table.lookup(array)
+        res = self.table.lookup(array, True)
         if not res:
             self.errors.append(f"{self.table.get_scope_name()} id {array} não declarado.")
             return None
         if res.sym_type != 'array':
             self.errors.append(f"{self.table.get_scope_name()} id {array} não é um array.")
             return None
-        index = node["index"]
-        return self.analyze(index)
+        index = self.analyze(node['index'])
+        if index != 'number':
+            self.errors.append(f"{self.table.get_scope_name()} para acessar um vetor, é necessário usar 'number' ao invés de '{index}'.")
+            return None
+        elif node['index']['type'] == 'Literal':
+            current_index = int(node['index']['value'])
+            if current_index >= res.size:
+                self.errors.append(f"{self.table.get_scope_name()} erro de segmentação ao acessar {res.name}.")
+                return None
+        if res.data_type in ('int', 'float', 'bool'):
+            return 'number'
+        return res.data_type 
     
     def analyze_BinaryOp(self,node):
         rvalue = self.analyze(node["rvalue"])

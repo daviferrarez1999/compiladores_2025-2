@@ -11,10 +11,10 @@ def main():
     Returns:
         None
     """
-    # if len(sys.argv) < 2:
-    #     print("Nome do arquivo precisa ser fornecido")
-    #     sys.exit(1)
-    # arquivo = sys.argv[1]
+    if len(sys.argv) < 2:
+        print("Nome do arquivo precisa ser fornecido")
+        sys.exit(1)
+    arquivo = sys.argv[1]
     # print('Arquivo de entrada: ', arquivo)
     # print('Iniciando Léxico')
     # lexico.input(arquivo)
@@ -23,7 +23,7 @@ def main():
     # sintatico.input(buffer)
     # sintatico.output()
 
-    tempAsaPath = os.path.join('tmp', 'asa', 'asa.json')
+    tempAsaPath = os.path.join('asa', arquivo)
     # semantico 2
     semantico.init(tempAsaPath)
     semantico.analyzeAsa()

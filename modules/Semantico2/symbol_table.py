@@ -9,7 +9,12 @@ class SymbolTable():
         self.current = Scope(name,self.current)
 
     def exit_scope(self):
+        unnused_variables = []
+        for variable in self.current.symbols:
+            if not self.current.symbols[variable].used:
+                unnused_variables.append(self.current.symbols[variable])
         self.current = self.current.parent
+        return unnused_variables
 
     def get_scope_name(self):
         sp = self.current
@@ -29,13 +34,15 @@ class SymbolTable():
         self.current.symbols[symbol.name] = symbol
         return True
 
-    def lookup(self,name):
+    def lookup(self,name, mark_as_used: bool = False):
         '''
         Busca um nome de forma recursiva na tabela de símbolos
         '''
         scope = self.current
         while scope:
             if name in scope.symbols:
+                if mark_as_used:
+                    scope.symbols[name].used = True
                 return scope.symbols[name]
             scope = scope.parent
         return None
