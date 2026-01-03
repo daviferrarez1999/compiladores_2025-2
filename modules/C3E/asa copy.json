@@ -519,7 +519,7 @@
     {
       "type": "FunctionDecl",
       "id": "printFib",
-      "returnType": "char",
+      "returnType": "int",
       "params": [
         {
           "type": "Param",

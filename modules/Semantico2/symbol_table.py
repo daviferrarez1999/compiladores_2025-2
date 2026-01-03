@@ -3,13 +3,21 @@ from .symbol import Symbol
 
 class SymbolTable():
     def __init__(self):
-        self.current = Scope()
+        self.current = Scope("Global")
 
-    def enter_scope(self):
-        self.current = Scope(self.current)
+    def enter_scope(self,name="Default"):
+        self.current = Scope(name,self.current)
 
     def exit_scope(self):
         self.current = self.current.parent
+
+    def get_scope_name(self):
+        name = ""
+        sp = self.current
+        while sp:
+            name = f"{sp.name} > {name} "
+            sp = sp.parent
+        return name
 
     def define(self, decl):
         symbol = self.to_symbol(decl)
