@@ -324,11 +324,17 @@ class Sintatico(ISintatico):
         node.add(typeNode)
         return typeNode
 
+<<<<<<< Updated upstream
     def Program1(self, node: Node) -> Optional[Node]:
         idNode = self.match({"ID"})
         node.add(idNode)
         self.Program2(node)
         return idNode
+=======
+    def Program1(self):
+        self.computeMatch('ID')
+        self.Program2()
+>>>>>>> Stashed changes
 
     def Program2(self, node: Node) -> Optional[Node]:
         self.languageStack.append(self.Program2.__name__)
@@ -336,12 +342,25 @@ class Sintatico(ISintatico):
             node.name = self.FunctionDecl.__name__
             self.FunctionDecl(node)
         else:
+<<<<<<< Updated upstream
             node.name = self.VarDecl.__name__
             self.Array1(node)
             self.match({";"})
             parentNode = node.getParent().getParent()
             newProgram = self.Program(parentNode)
             parentNode.prepend(newProgram)
+=======
+            self.VarDecl_2()
+            self.Program()
+
+    def VarDecl_2(self):
+        
+        
+    def IdList(self):
+        self.languageStack.append(self.IdList.__name__)
+        self.match({'ID'})
+        self.Array1()
+>>>>>>> Stashed changes
 
         return node
         

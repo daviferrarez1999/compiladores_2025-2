@@ -1,5 +1,11 @@
+<<<<<<< Updated upstream
 char t, k;
 char teste(char a, char b) {
+=======
+var x;
+
+char teste() {
+>>>>>>> Stashed changes
     int x;
     b[4] = 44 + 99 + 3 / 5;
 }
