@@ -961,8 +961,17 @@
           }
         },
         {
-          "type": "If",
-          "condition": {
+          "type": "VarDecl",
+          "varType": "bool",
+          "id": "ok"
+        },
+        {
+          "type": "Assign",
+          "lvalue": {
+            "type": "Identifier",
+            "name": "ok"
+          },
+          "rvalue": {
             "type": "BinaryOp",
             "op": "||",
             "lvalue": {
@@ -1025,6 +1034,20 @@
                 }
               }
             }
+          }
+        },
+        {
+          "type": "Print",
+          "value": {
+            "type": "Identifier",
+            "name": "ok"
+          }
+        },
+        {
+          "type": "If",
+          "condition": {
+            "type": "Identifier",
+            "name": "ok"
           },
           "then": [
             {
