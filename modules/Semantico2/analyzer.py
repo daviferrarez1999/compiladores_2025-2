@@ -31,7 +31,7 @@ class SemanticAnalyzer():
     def get_global_scope(self):
         for decl in self.asa["Program"]:
             if not self.table.define(decl):
-                self.errors.append(f"{self.table.get_scope_name()} id {decl["id"]} já declarado.")
+                self.errors.append(f"{self.table.get_scope_name()} id '{decl["id"]}' já declarado.")
 
     def has_errors(self):
         return len(self.errors) > 0
@@ -50,28 +50,28 @@ class SemanticAnalyzer():
                 
                 for p in decl["params"]:
                     if not self.table.define(p):
-                        self.errors.append(f"{self.table.get_scope_name()} id {p["id"]} já declarado antes de {decl["id"]}.")
+                        self.errors.append(f"{self.table.get_scope_name()} id '{p["id"]}' já declarado antes de '{decl["id"]}'.")
                 
                 self.analyze_Body(decl)
                 unnused_variables = self.table.exit_scope()
                 for variable in unnused_variables:
-                    self.errors.append(f"{self.table.get_scope_name()} Variável não foi utilizada '{variable.name}'.")
+                    self.errors.append(f"{self.table.get_scope_name()} A variável '{variable.name}' não foi utilizada.")
 
     def analyze_Call(self,node):
         id = node["id"]
         std = f"em Call {id}"
         res = self.table.lookup(id, True)
         if not res:
-            self.errors.append(f"{self.table.get_scope_name()} id {id} não declarado {std}.")
+            self.errors.append(f"{self.table.get_scope_name()} id '{id}' não declarado '{std}'.")
             return None
         if res.sym_type != 'func':
-            self.errors.append(f"{self.table.get_scope_name()} id {id} não é uma função {std}.")
+            self.errors.append(f"{self.table.get_scope_name()} id '{id}' não é uma função '{std}'.")
             return None
         for i, arg in enumerate(node["args"]):
             paramType = self.analyze(arg)
             expectedParamType = 'number' if res.params[i]["varType"] in ['int','float','bool'] else 'char'
             if paramType != expectedParamType:
-                self.errors.append(f"{self.table.get_scope_name()} parâmetro de tipo {paramType} diferente do tipo esperado {expectedParamType} {std}.")
+                self.errors.append(f"{self.table.get_scope_name()} parâmetro de tipo '{paramType}' diferente do tipo esperado '{expectedParamType}' '{std}'.")
                 return None
         if res.data_type in ['int','float','bool']:
             return 'number'
@@ -82,7 +82,7 @@ class SemanticAnalyzer():
         value = node["value"]
         returnType = self.analyze(value)
         if expectedType != returnType:
-            self.errors.append(f"{self.table.get_scope_name()} retorno de tipo {returnType} diferente do tipo esperado {expectedType}.")
+            self.errors.append(f"{self.table.get_scope_name()} retorno de tipo '{returnType}' diferente do tipo esperado '{expectedType}'.")
             return None
         return returnType
 
@@ -103,7 +103,7 @@ class SemanticAnalyzer():
 
     def analyze_Print(self,node):
         if not self.analyze(node["value"]):
-            self.errors.append(f"{self.table.get_scope_name()} Tipo de valor não pode ser impresso {node["value"]["type"]}")
+            self.errors.append(f"{self.table.get_scope_name()} Tipo de valor não pode ser impresso '{node["value"]["type"]}'")
 
     def analyze_While(self,node):
         if not self.analyze(node["condition"]):
@@ -119,11 +119,11 @@ class SemanticAnalyzer():
         lvalue = self.analyze(node['lvalue'])
         rvalue = self.analyze(node['rvalue'])
         if lvalue != rvalue:
-            self.errors.append(f"{self.table.get_scope_name()} Tipos não são compatíveis no operador Assign.")
+            self.errors.append(f"{self.table.get_scope_name()} Tipos não são compatíveis no operador Assign.\nlvalue = '{lvalue}'\nrvalue = '{rvalue}'")
     
     def analyze_VarDecl(self,decl):
         if not self.table.define(decl):
-            self.errors.append(f"{self.table.get_scope_name()} id {decl["id"]} já declarado.")
+            self.errors.append(f"{self.table.get_scope_name()} id '{decl["id"]}' já declarado.")
 
     def analyze_Body(self,decl):
         global expectedType
@@ -136,10 +136,10 @@ class SemanticAnalyzer():
         id = node["name"]
         res = self.table.lookup(id, True)
         if not res:
-            self.errors.append(f"{self.table.get_scope_name()} id {id} não declarado.")
+            self.errors.append(f"{self.table.get_scope_name()} id '{id}' não declarado.")
             return None
         if res.sym_type != 'var':
-            self.errors.append(f"{self.table.get_scope_name()} id {id} não é uma variável.")
+            self.errors.append(f"{self.table.get_scope_name()} id '{id}' não é uma variável.")
             return None
         if res.data_type in ['int','float','bool']:
             return 'number'
@@ -149,10 +149,10 @@ class SemanticAnalyzer():
         array = node["array"]
         res = self.table.lookup(array, True)
         if not res:
-            self.errors.append(f"{self.table.get_scope_name()} id {array} não declarado.")
+            self.errors.append(f"{self.table.get_scope_name()} id '{array}' não declarado.")
             return None
         if res.sym_type != 'array':
-            self.errors.append(f"{self.table.get_scope_name()} id {array} não é um array.")
+            self.errors.append(f"{self.table.get_scope_name()} id '{array}' não é um array.")
             return None
         index = self.analyze(node['index'])
         if index != 'number':
@@ -161,7 +161,7 @@ class SemanticAnalyzer():
         elif node['index']['type'] == 'Literal':
             current_index = int(node['index']['value'])
             if current_index >= res.size:
-                self.errors.append(f"{self.table.get_scope_name()} erro de segmentação ao acessar {res.name}.")
+                self.errors.append(f"{self.table.get_scope_name()} erro de segmentação ao acessar '{res.name}'.")
                 return None
         if res.data_type in ('int', 'float', 'bool'):
             return 'number'
@@ -173,17 +173,17 @@ class SemanticAnalyzer():
 
 
         if lvalue in ("string","char",None) or rvalue in ("string","char",None):
-            self.errors.append(f"{self.table.get_scope_name()} Operação Inválida com {rvalue} {node["op"]} {lvalue}.")
+            self.errors.append(f"{self.table.get_scope_name()} Operação Inválida com '{rvalue}' '{node["op"]} {lvalue}'.")
             return None
         return "number"
     
     def analyze_UnaryOp(self,node):
         id = node["id"]
         if id["type"] == "Literal":
-            self.errors.append(f"{self.table.get_scope_name()} Operação {node["op"]} inválida para {id["value"]}.")
+            self.errors.append(f"{self.table.get_scope_name()} Operação '{node["op"]}' inválida para '{id["value"]}'.")
             return None
         elif self.analyze(id) is None:
-            self.errors.append(f"{self.table.get_scope_name()} Operação {node["op"]} inválida para {id["name"]}.")
+            self.errors.append(f"{self.table.get_scope_name()} Operação '{node["op"]}' inválida para '{id["name"]}'.")
             return None
         return "number"
     
