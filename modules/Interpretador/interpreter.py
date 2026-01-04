@@ -22,13 +22,10 @@ def read_code(dir):
             code.append([''])
             continue
 
-        parts = shlex.split(line)
+        parts = shlex.split(line, posix=False)
         if not parts:
             code.append([''])
             continue
-
-        if '\'' in line:
-            parts[1] = f'{parts[1]}'
 
         code.append(parts)
         
@@ -306,7 +303,7 @@ def PRINT():
     a = get_addresses()[0]
     text = str(to_value(a))
 
-    if text[0] == '\'':
+    if text[0] == '\"' or text[0] == '\'':
         text = text[1:-1]
     print(text.replace('\\n','\n'),end='')
 
