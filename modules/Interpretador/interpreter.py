@@ -70,7 +70,12 @@ def to_value(id):
     if val is not None: return val
     
     if '.' in id:
-        name, pos = id.split('.')
+        split = id.split('.')
+        name = split[0]
+        pos = split[1]
+        if len(split)>2:
+            for i in split[2:]:
+                pos+='.'+i
         pos_val = int(to_value(pos))
         
         target = GLOBALS.get(name)
@@ -79,7 +84,10 @@ def to_value(id):
 
         target=target['value']
         
-        item = target[pos_val] if target is not None else None
+        try:
+            item = target[pos_val] if target is not None else None
+        except:
+            raise IndexError("Segmentation fault") from None
         return item['value'] if isinstance(item, dict) else item
 
     # Busca em Globais ou Frames
@@ -135,7 +143,12 @@ def set_value(id, val):
                 GLOBALS[id] = prepare_storage(None, val)
     else:
         # Para Arrays
-        name, pos = id.split('.')
+        split = id.split('.')
+        name = split[0]
+        pos = split[1]
+        if len(split)>2:
+            for i in split[2:]:
+                pos+='.'+i
         pos_idx = int(to_value(pos))
         
         target_array = GLOBALS.get(name)
@@ -146,7 +159,10 @@ def set_value(id, val):
         
         if target_array is not None:
             # Assume-se que o array guarda dicionários em cada posição
-            target_array[pos_idx] = val
+            try:
+                target_array[pos_idx] = val
+            except:
+                raise IndexError("Segmentation fault") from None
 
 def LOAD():
     global PC
@@ -464,22 +480,28 @@ def init(asaPath):
     CODE, LABELS = read_code(asaPath)
     PC = 0
 
-    while PC < len(CODE) and code_type(PC) != 'LABEL':
-        func = code_type(PC)
-        if func:
-            HANDLER[code_type(PC)]()
-        else:
-            PC += 1
+    try:
+        while PC < len(CODE) and code_type(PC) != 'LABEL':
+            func = code_type(PC)
+            if func:
+                HANDLER[code_type(PC)]()
+            else:
+                PC += 1
 
-    STACK.append(Frame())
-    PC = LABELS.get('main',None)
+        STACK.append(Frame())
+        PC = LABELS.get('main',None)
 
-    while PC is not None and PC < len(CODE):
-        func = code_type(PC)
-        if func:
-            HANDLER[code_type(PC)]()
-        else:
-            PC += 1
+        while PC is not None and PC < len(CODE):
+            func = code_type(PC)
+            if func:
+                HANDLER[code_type(PC)]()
+            else:
+                PC += 1
+    except IndexError as e:
+        print("\nError: ",end=f"{e}\n")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except IndexError as e:
+        print("\nError: ",end=f"{e}\n")
