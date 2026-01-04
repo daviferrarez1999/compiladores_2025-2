@@ -6,7 +6,7 @@ CODE: list[list[str]] = None                    # Lista de instruções
 LABELS: dict[str,int] = None                    # Lista de marcadores
 PC = 0                                          # Program Counter
 STACK: list[Frame] = []                         # Pilha de frames (chamadas de funções)
-GLOBALS = {'ra': {'value': None, 'type': None}} # Variáveis globais
+GLOBALS = {'$ra': {'value': None, 'type': None}} # Variáveis globais
 PARAMETERS = []                                 # Fila de parâmetros usado pela instrução PARAM
 
 def read_code(dir):
@@ -293,7 +293,7 @@ def RETURN():
     type = 'float' if isinstance(val, float) else 'int'
     if isinstance(val, str): type = 'char'
     
-    GLOBALS['ra'] = {'value': val, 'type': type}
+    GLOBALS['$ra'] = {'value': val, 'type': type}
 
     static_link = current_frame().static_link
     if static_link:

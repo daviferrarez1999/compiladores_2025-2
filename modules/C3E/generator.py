@@ -101,7 +101,7 @@ class C3EGenerator:
         rvalue = self.gen(node["rvalue"])
 
         if node["rvalue"]["type"] == "Call":
-            self.emit(f"LD {lvalue} ra")
+            self.emit(f"LD {lvalue} $ra")
         else:
             self.emit(f"LD {lvalue} {rvalue}")
 
@@ -136,16 +136,16 @@ class C3EGenerator:
         return id
 
     def gen_BinaryOp(self,node):
-        # Se um valor for um call, então é preciso pegar o valor no ra
+        # Se um valor for um call, então é preciso pegar o valor no $ra
         t1 = self.gen(node["lvalue"])
         if node["lvalue"]["type"] == "Call":
             t1 = self.temp.new()
-            self.emit(f"LD {t1} ra")
+            self.emit(f"LD {t1} $ra")
 
         t2 = self.gen(node["rvalue"])
         if node["rvalue"]["type"] == "Call":
             t2 = self.temp.new()
-            self.emit(f"LD {t2} ra")
+            self.emit(f"LD {t2} $ra")
 
         t = self.temp.new()
         op = {
@@ -204,7 +204,7 @@ class C3EGenerator:
             size+=1
 
         self.emit(f"CALL {node["id"]} {size}")
-        return "ra"
+        return "$ra"
 
     def gen_Print(self,node):
         value = self.gen(node["value"])
