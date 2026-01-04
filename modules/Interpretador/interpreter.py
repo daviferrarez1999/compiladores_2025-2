@@ -193,7 +193,7 @@ def CALL():
     
     PARAMETERS.clear()
     
-    STACK.append(Frame(PC+1, params))
+    STACK.append(Frame(PC, params))
     PC = LABELS.get(a, None)
 
 def IF():
@@ -294,8 +294,11 @@ def RETURN():
     if isinstance(val, str): type = 'char'
     
     GLOBALS['ra'] = {'value': val, 'type': type}
-    
-    PC = current_frame().static_link
+
+    static_link = current_frame().static_link
+    if static_link:
+        static_link+=1  
+    PC = static_link
     STACK.pop()
 
 def PRINT():
