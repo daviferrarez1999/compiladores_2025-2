@@ -85,7 +85,7 @@ def to_value(id):
         target=target['value']
         
         try:
-            item = target[pos_val] if target is not None else None
+            item = target[int(pos_val)] if target is not None else None
         except:
             raise IndexError("Segmentation fault") from None
         return item['value'] if isinstance(item, dict) else item
@@ -160,7 +160,7 @@ def set_value(id, val):
         if target_array is not None:
             # Assume-se que o array guarda dicionários em cada posição
             try:
-                target_array[pos_idx] = val
+                target_array[int(pos_idx)] = val
             except:
                 raise IndexError("Segmentation fault") from None
 
