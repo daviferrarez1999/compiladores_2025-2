@@ -79,6 +79,9 @@ class C3EGenerator:
         for i,p in enumerate(node["params"]):
             self.emit(f"DECL {p["id"]} a{i}")
 
+            if p["varType"] == "bool":
+                self.emit(f"DFB {p["id"]}")
+
         for stmt in body:
             self.gen(stmt)
 
